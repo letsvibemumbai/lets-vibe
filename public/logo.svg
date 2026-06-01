@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96" fill="none">
+  <!-- Sunburst spikes behind -->
+  <g transform="translate(160 48)" opacity="0.95">
+    <g fill="#FF7A00">
+      <polygon points="0,-44 6,-30 -6,-30" />
+      <polygon points="44,0 30,6 30,-6" />
+      <polygon points="0,44 -6,30 6,30" />
+      <polygon points="-44,0 -30,-6 -30,6" />
+      <polygon points="31,-31 24,-18 18,-24" />
+      <polygon points="31,31 18,24 24,18" />
+      <polygon points="-31,31 -24,18 -18,24" />
+      <polygon points="-31,-31 -18,-24 -24,-18" />
+    </g>
+    <circle r="34" fill="#FFD93D" stroke="#0A0A0A" stroke-width="3" />
+  </g>
+  <!-- Yellow "Let's" sticker -->
+  <g transform="translate(8 12) rotate(-3 60 22)">
+    <rect x="0" y="0" width="120" height="40" rx="8" fill="#FFD93D" stroke="#0A0A0A" stroke-width="3" />
+    <text x="60" y="29" text-anchor="middle" font-family="'Bagel Fat One', 'Lilita One', system-ui, sans-serif" font-size="24" fill="#0A0A0A" font-weight="900">Let&apos;s</text>
+  </g>
+  <!-- Pink "Vibe" sticker -->
+  <g transform="translate(150 38) rotate(2 70 22)">
+    <rect x="0" y="0" width="158" height="44" rx="10" fill="#FF4FA3" stroke="#0A0A0A" stroke-width="3" />
+    <text x="79" y="32" text-anchor="middle" font-family="'Bagel Fat One', 'Lilita One', system-ui, sans-serif" font-size="28" fill="#FFFBF5" font-weight="900">Vibe</text>
+  </g>
+</svg>

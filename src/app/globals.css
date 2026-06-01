@@ -1,26 +1,392 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* Vibe brand palette (canonical names — kept for the wordmark and admin) */
+  --color-vibe-pink: #FF4FA3;
+  --color-vibe-pink-soft: #FF8FB8;
+  --color-vibe-yellow: #FFD93D;
+  --color-vibe-orange: #FF7A00;
+  --color-vibe-black: #0A0A0A;
+  --color-vibe-cream: #FFFBF5;
+  --color-vibe-cream-dark: #FFF4E0;
+
+  /* Editorial palette — theme-aware. The `--e-*` runtime vars are defined
+     LIGHT in :root (admin keeps its original light look) and DARK in `.dark`
+     (the cinematic public + booking surfaces). Mapping to var() here — instead
+     of literals — is what lets one token system serve both themes. */
+  --color-cream: var(--e-cream);          /* primary surface */
+  --color-cream-tonal: var(--e-cream-tonal); /* elevated / alternating */
+  --color-ink: var(--e-ink);              /* primary text / foreground */
+  --color-ink-soft: var(--e-ink-soft);    /* softer ink for body */
+  --color-hairline: var(--e-hairline);    /* 1px borders */
+  --color-hairline-strong: var(--e-hairline-strong);
+  --color-accent-soft: #E7C77E;           /* lighter gold for hovers / glints */
+  /* NOTE: --color-muted and --color-accent are (re)aliased further down in the
+     shadcn block; they are pointed at --e-muted / --accent there so the
+     editorial values win. */
+
+  /* Back-compat aliases — pre-redesign components used these names. NOTE:
+     do NOT re-alias --color-cream here; it must keep the dark cinema value
+     defined above (a stray alias was overriding it to a light cream). */
+  --color-brand-white: var(--brand-white);
+  --color-brand-pink: var(--brand-pink);
+  --color-brand-yellow: var(--brand-yellow);
+
+  --font-sans: var(--font-body);
+  --font-body: var(--font-body);
+  --font-display: var(--font-display);
+  --font-heading: var(--font-display);
+  --font-hand: var(--font-hand);
+  --font-serif: var(--font-serif);
+  --font-wordmark: var(--font-wordmark);
+  --font-jakarta: var(--font-jakarta);
+  --font-mono: var(--font-geist-mono);
+
+  /* Chunky offset shadows — sticker peel-off effect, no blur */
+  --shadow-sticker: 4px 4px 0 0 #0A0A0A;
+  --shadow-sticker-lg: 6px 6px 0 0 #0A0A0A;
+  --shadow-sticker-xl: 8px 8px 0 0 #0A0A0A;
+  --shadow-sticker-hover: 2px 2px 0 0 #0A0A0A;
+  --shadow-sticker-pink: 4px 4px 0 0 #FF4FA3;
+  --shadow-sticker-yellow: 4px 4px 0 0 #FFD93D;
+
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--e-muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+  --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite alternate;
+  --animate-spin-around: spin-around calc(var(--speed) * 2) infinite linear;
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  --animate-gradient: gradient 8s linear infinite;
+  --animate-wiggle: wiggle 0.6s ease-in-out;
+  --animate-bounce-soft: bounce-soft 1.4s ease-in-out infinite;
+  --animate-float: float 4s ease-in-out infinite;
+  --animate-spin-slow: spin 18s linear infinite;
+  @keyframes shimmer-slide {
+  to {
+    transform: translate(calc(100cqw - 100%), 0);
+    }
+  }
+  @keyframes spin-around {
+  0% {
+    transform: translateZ(0) rotate(0);
+    }
+  15%, 35% {
+    transform: translateZ(0) rotate(90deg);
+    }
+  65%, 85% {
+    transform: translateZ(0) rotate(270deg);
+    }
+  100% {
+    transform: translateZ(0) rotate(360deg);
+    }
+  }
+  @keyframes marquee {
+  from {
+    transform: translateX(0);
+    }
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+    }
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes gradient {
+  to {
+    background-position: var(--bg-size, 300%) 0;
+    }
+  }
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(-3deg); }
+    50% { transform: rotate(3deg); }
+  }
+  @keyframes bounce-soft {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(var(--float-rot, 0deg)); }
+    50% { transform: translateY(-12px) rotate(calc(var(--float-rot, 0deg) + 4deg)); }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+:root {
+  /* Editorial tokens — LIGHT defaults (admin keeps its original look). The
+     `.dark` block below swaps these to the cinematic values for public +
+     booking surfaces. */
+  --e-cream: #FAF7F2;
+  --e-cream-tonal: #F0EBE3;
+  --e-ink: #1A1612;
+  --e-ink-soft: #2A241F;
+  --e-muted: #6B6259;
+  --e-hairline: rgba(26, 22, 18, 0.12);
+  --e-hairline-strong: rgba(26, 22, 18, 0.22);
+
+  /* Loud brand palette — sticker book, Gen Z romantic. NOT pastel. */
+  --brand-white: #FFFFFF;
+  --brand-pink: #FF4FA3;
+  --brand-yellow: #FFD93D;
+  --brand-cream: #FFFBF5;
+
+  --background: #FAF7F2;
+  --foreground: #1A1612;
+  --card: #FFFFFF;
+  --card-foreground: #0A0A0A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0A0A0A;
+  --primary: #0A0A0A;
+  --primary-foreground: #FFFBF5;
+  --secondary: #FFF4E0;
+  --secondary-foreground: #0A0A0A;
+  --muted: #FFF4E0;
+  --muted-foreground: oklch(0.45 0 0);
+  --accent: #FFD93D;
+  --accent-foreground: #0A0A0A;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.92 0 0);
+  --input: oklch(0.92 0 0);
+  --ring: #FF4FA3;
+  --chart-1: #FF4FA3;
+  --chart-2: #FFD93D;
+  --chart-3: #FF7A00;
+  --chart-4: #FF8FB8;
+  --chart-5: #0A0A0A;
+  --radius: 0.875rem;
+  --sidebar: #FFFBF5;
+  --sidebar-foreground: #0A0A0A;
+  --sidebar-primary: #FF4FA3;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #FFF4E0;
+  --sidebar-accent-foreground: #0A0A0A;
+  --sidebar-border: #0A0A0A;
+  --sidebar-ring: #FF4FA3;
+}
+
+.dark {
+  /* Editorial tokens — DARK (cinematic) values for public + booking. */
+  --e-cream: #0B0B0F;
+  --e-cream-tonal: #141419;
+  --e-ink: #F4F1EA;
+  --e-ink-soft: #D9D4CA;
+  --e-muted: #9A9389;
+  --e-hairline: rgba(244, 241, 234, 0.12);
+  --e-hairline-strong: rgba(244, 241, 234, 0.24);
+
+  /* Cinematic dark — warm near-black surfaces, gold spotlight accent. */
+  --background: #0B0B0F;
+  --foreground: #F4F1EA;
+  --card: #141419;
+  --card-foreground: #F4F1EA;
+  --popover: #16161C;
+  --popover-foreground: #F4F1EA;
+  --primary: #F4F1EA;
+  --primary-foreground: #0B0B0F;
+  --secondary: #1C1C22;
+  --secondary-foreground: #F4F1EA;
+  --muted: #1C1C22;
+  --muted-foreground: #9A9389;
+  --accent: #D9A94C;
+  --accent-foreground: #0B0B0F;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: rgba(244, 241, 234, 0.14);
+  --input: rgba(244, 241, 234, 0.18);
+  --ring: #D9A94C;
+  --chart-1: #D9A94C;
+  --chart-2: #E7C77E;
+  --chart-3: #B6863A;
+  --chart-4: #8A6BD1;
+  --chart-5: #6B6259;
+  --sidebar: #0E0E13;
+  --sidebar-foreground: #F4F1EA;
+  --sidebar-primary: #D9A94C;
+  --sidebar-primary-foreground: #0B0B0F;
+  --sidebar-accent: #1C1C22;
+  --sidebar-accent-foreground: #F4F1EA;
+  --sidebar-border: rgba(244, 241, 234, 0.12);
+  --sidebar-ring: #D9A94C;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply text-foreground antialiased;
+    /* Dark cinema backdrop by default so there is NO flash of a light theme
+       before the public/booking `.dark` wrappers paint. The admin shell paints
+       its own full light background (bg-vibe-cream) over this. */
+    background-color: #0B0B0F;
+    font-family: var(--font-body), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  html {
+    font-family: var(--font-body), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    /* Dark page backdrop so mobile overscroll / rubber-banding never flashes a
+       light bar on the public + booking pages. The admin shell paints its own
+       full light background (bg-vibe-cream) over this. */
+    background-color: #0B0B0F;
+  }
+  /* Reduced motion: kill the show-off animations for users who want calm. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* 3px chunky borders for sticker outlines */
+  .border-3 { border-width: 3px; }
+  .border-t-3 { border-top-width: 3px; }
+  .border-b-3 { border-bottom-width: 3px; }
+  .border-l-3 { border-left-width: 3px; }
+  .border-r-3 { border-right-width: 3px; }
+  .border-y-3 { border-top-width: 3px; border-bottom-width: 3px; }
+  .border-x-3 { border-left-width: 3px; border-right-width: 3px; }
+
+  /* Off-axis rotations for sticker placement */
+  .-rotate-7 { transform: rotate(-7deg); }
+  .rotate-7 { transform: rotate(7deg); }
+  .-rotate-10 { transform: rotate(-10deg); }
+  .rotate-10 { transform: rotate(10deg); }
+
+  /* Sticker base — chunky offset shadow + thick border + cream fill */
+  .sticker-shadow { box-shadow: var(--shadow-sticker); }
+  .sticker-shadow-lg { box-shadow: var(--shadow-sticker-lg); }
+  .sticker-shadow-xl { box-shadow: var(--shadow-sticker-xl); }
+  .sticker-shadow-hover { box-shadow: var(--shadow-sticker-hover); }
+  .sticker-shadow-none { box-shadow: 0 0 0 0 #0A0A0A; }
+
+  /* Hand-drawn underline animator (used with ScribbleUnderline) */
+  .scribble-path {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+  }
+  .scribble-path.drawn {
+    animation: draw-scribble 1.4s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  }
+  @keyframes draw-scribble {
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* Mobile: tone down rotations and shadow offsets per Step 8 */
+  @media (max-width: 640px) {
+    .sticker-shadow { box-shadow: 3px 3px 0 0 #0A0A0A; }
+    .sticker-shadow-lg { box-shadow: 4px 4px 0 0 #0A0A0A; }
+    .sticker-shadow-xl { box-shadow: 5px 5px 0 0 #0A0A0A; }
+  }
+
+  /* Photo warm-grade — applied to <img> inside .photo-warm so stock photos
+     don't read as stock. Multiply overlay handled per component. */
+  .photo-warm img {
+    filter: saturate(1.1) brightness(0.95) contrast(1.05);
+  }
+
+  /* Editorial photo grade (V3). Apply directly to <img> or via .photo-grade
+     wrapper. Subtler than .photo-warm so editorial photography keeps its
+     own register. */
+  .photo-grade {
+    filter: saturate(0.95) brightness(0.97) contrast(1.02) sepia(0.05);
+  }
+  .photo-grade img {
+    filter: saturate(0.95) brightness(0.97) contrast(1.02) sepia(0.05);
+  }
+
+  /* Slow Ken Burns for hero photography. 14s loop, barely perceptible. */
+  @keyframes ken-burns {
+    0%   { transform: scale(1.00) translate(0%, 0%); }
+    50%  { transform: scale(1.06) translate(-1%, -1.5%); }
+    100% { transform: scale(1.00) translate(0%, 0%); }
+  }
+  .ken-burns {
+    animation: ken-burns 18s ease-in-out infinite;
+  }
+
+  /* Native cursor hide — applied to <html> when our quiet cursor mounts. */
+  .hide-native-cursor,
+  .hide-native-cursor * {
+    cursor: none !important;
+  }
+
+  /* Mask-wipe headline reveal — used by editorial DisplayHeading.
+     Pair with a parent that flips data-revealed="true" once in view. */
+  .mask-wipe {
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 900ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  [data-revealed="true"] .mask-wipe,
+  .mask-wipe[data-revealed="true"] {
+    clip-path: inset(0 0 0 0);
+  }
+
+  /* Torn-paper SVG edge as a clip-path. Used between sections to break the
+     rectangular seam. */
+  .torn-top {
+    clip-path: polygon(
+      0% 14px, 3% 4px, 7% 12px, 12% 2px, 17% 10px, 22% 0px, 28% 8px,
+      33% 2px, 39% 14px, 45% 4px, 51% 10px, 56% 0px, 62% 12px, 67% 4px,
+      72% 14px, 77% 2px, 82% 10px, 87% 4px, 92% 12px, 96% 6px, 100% 12px,
+      100% 100%, 0% 100%
+    );
+  }
+  .torn-bottom {
+    clip-path: polygon(
+      0% 0%, 100% 0%, 100% calc(100% - 12px), 96% calc(100% - 6px),
+      92% calc(100% - 12px), 87% calc(100% - 4px), 82% calc(100% - 10px),
+      77% calc(100% - 2px), 72% calc(100% - 14px), 67% calc(100% - 4px),
+      62% calc(100% - 12px), 56% calc(100% - 0px), 51% calc(100% - 10px),
+      45% calc(100% - 4px), 39% calc(100% - 14px), 33% calc(100% - 2px),
+      28% calc(100% - 8px), 22% calc(100% - 0px), 17% calc(100% - 10px),
+      12% calc(100% - 2px), 7% calc(100% - 12px), 3% calc(100% - 4px),
+      0% calc(100% - 14px)
+    );
+  }
 }

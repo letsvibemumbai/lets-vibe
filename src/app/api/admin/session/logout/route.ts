@@ -1,0 +1,17 @@
+import { NextResponse } from "next/server";
+import { SESSION_COOKIE, requireAdmin } from "@/lib/auth/session";
+
+export const runtime = "nodejs";
+
+export async function DELETE() {
+  await requireAdmin();
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set(SESSION_COOKIE, "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
+  return res;
+}

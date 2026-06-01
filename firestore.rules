@@ -1,0 +1,85 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Replace ADMIN_EMAIL_PLACEHOLDER at deploy time, or — preferred —
+    // set a custom claim `admin: true` on the admin user via the Admin
+    // SDK and change isAdmin() to: request.auth.token.admin == true.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() == 'letsvibe.mumbai@gmail.com';
+    }
+
+    // ----- screens -----
+    // Public read; admin write.
+    match /screens/{screenId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ----- addon items & packages -----
+    // Public read of any doc (booking form needs to load them; we filter by
+    // `active` client-side). Admin write only.
+    match /addonItems/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /addonPackages/{packageId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ----- bookings -----
+    // - Admin: full access.
+    // - Public: may CREATE a pending online booking only (no payment IDs,
+    //   bounded fields), and may GET a single booking by ID (used by the
+    //   post-checkout confirmation screen). LIST is admin-only.
+    match /bookings/{bookingId} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow update, delete: if isAdmin();
+      allow create: if isAdmin() || (
+        request.resource.data.status == 'pending'
+        && request.resource.data.source == 'online'
+        && request.resource.data.amountPaid == 0
+        && !('razorpayPaymentId' in request.resource.data)
+        && request.resource.data.keys().hasAll([
+          'screenId', 'date', 'startTime', 'endTime', 'duration',
+          'customerName', 'customerPhone', 'guestCount',
+          'amount', 'amountPaid', 'status', 'source'
+        ])
+      );
+    }
+
+    // ----- expenses -----
+    // Admin only.
+    match /expenses/{expenseId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ----- settings (membership config, etc.) -----
+    // Public read so the booking/account UI can show current terms; admin write.
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ----- memberships/{uid} -----
+    // A user may read their own record and create their own `pending` request.
+    // Confirmation, the discounted-booking decrement, and revocation all happen
+    // server-side via the Admin SDK (which bypasses these rules).
+    match /memberships/{uid} {
+      allow get: if isAdmin() || (request.auth != null && request.auth.uid == uid);
+      allow list: if isAdmin();
+      allow create: if isAdmin() || (
+        request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.remainingDiscountedBookings == 0
+      );
+      allow update, delete: if isAdmin();
+    }
+  }
+}
