@@ -1,6 +1,7 @@
 import "server-only";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
+import { timestampToMillis } from "@/lib/db/bookings.server";
 import type {
   Expense,
   ExpenseCategory,
@@ -23,7 +24,13 @@ function monthRange(year: number, month: number): { start: string; end: string }
 }
 
 function toExpense(id: string, data: FirebaseFirestore.DocumentData): Expense {
-  return { id, ...data } as Expense;
+  // Normalize the Firestore Timestamp so expenses are plain serializable
+  // objects (safe to pass to client components).
+  return {
+    ...(data as Omit<Expense, "id">),
+    id,
+    createdAt: timestampToMillis(data.createdAt),
+  } as Expense;
 }
 
 export async function getExpense(id: string): Promise<Expense | null> {
@@ -40,9 +47,10 @@ export async function getExpensesInRange(
     .collection(COLLECTION)
     .where("date", ">=", startDate)
     .where("date", "<=", endDate)
-    .orderBy("date", "desc")
     .get();
-  return snap.docs.map((d) => toExpense(d.id, d.data()));
+  const rows = snap.docs.map((d) => toExpense(d.id, d.data()));
+  rows.sort((a, b) => b.date.localeCompare(a.date));
+  return rows;
 }
 
 export async function getExpensesForMonth(year: number, month: number): Promise<Expense[]> {
@@ -79,13 +87,15 @@ export type ExpenseListFilters = {
 export async function listExpenses(
   filters: ExpenseListFilters,
 ): Promise<Expense[]> {
-  let q: FirebaseFirestore.Query = adminDb.collection(COLLECTION);
-  if (filters.category) q = q.where("category", "==", filters.category);
+  // Index-free: filter + sort in memory to avoid composite indexes for
+  // arbitrary filter combinations.
+  const snap = await adminDb.collection(COLLECTION).get();
+  let rows = snap.docs.map((d) => toExpense(d.id, d.data()));
+  if (filters.category) rows = rows.filter((e) => e.category === filters.category);
   if (filters.paymentMethod)
-    q = q.where("paymentMethod", "==", filters.paymentMethod);
-  if (filters.dateFrom) q = q.where("date", ">=", filters.dateFrom);
-  if (filters.dateTo) q = q.where("date", "<=", filters.dateTo);
-  q = q.orderBy("date", "desc");
-  const snap = await q.get();
-  return snap.docs.map((d) => toExpense(d.id, d.data()));
+    rows = rows.filter((e) => e.paymentMethod === filters.paymentMethod);
+  if (filters.dateFrom) rows = rows.filter((e) => e.date >= filters.dateFrom!);
+  if (filters.dateTo) rows = rows.filter((e) => e.date <= filters.dateTo!);
+  rows.sort((a, b) => b.date.localeCompare(a.date));
+  return rows;
 }

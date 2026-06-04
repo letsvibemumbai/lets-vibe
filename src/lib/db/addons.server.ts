@@ -15,10 +15,13 @@ function fromDoc<T>(d: FirebaseFirestore.QueryDocumentSnapshot): WithId<T> {
 // ---------- items ----------
 
 export async function listAddonItems(opts?: { activeOnly?: boolean }): Promise<AddonItem[]> {
-  let q: FirebaseFirestore.Query = adminDb.collection(ITEMS).orderBy("sortOrder").orderBy("name");
-  if (opts?.activeOnly) q = q.where("active", "==", true);
-  const snap = await q.get();
-  return snap.docs.map((d) => fromDoc<Omit<AddonItem, "id">>(d) as AddonItem);
+  // Index-free: a double orderBy(sortOrder, name) needs a composite index, so
+  // fetch and sort/filter in memory instead (the catalogue is small).
+  const snap = await adminDb.collection(ITEMS).get();
+  let rows = snap.docs.map((d) => fromDoc<Omit<AddonItem, "id">>(d) as AddonItem);
+  if (opts?.activeOnly) rows = rows.filter((r) => r.active);
+  rows.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name));
+  return rows;
 }
 
 export async function getAddonItem(id: string): Promise<AddonItem | null> {
@@ -56,10 +59,12 @@ export async function deleteAddonItem(id: string): Promise<void> {
 // ---------- packages ----------
 
 export async function listAddonPackages(opts?: { activeOnly?: boolean }): Promise<AddonPackage[]> {
-  let q: FirebaseFirestore.Query = adminDb.collection(PACKAGES).orderBy("sortOrder").orderBy("name");
-  if (opts?.activeOnly) q = q.where("active", "==", true);
-  const snap = await q.get();
-  return snap.docs.map((d) => fromDoc<Omit<AddonPackage, "id">>(d) as AddonPackage);
+  // Index-free (see listAddonItems).
+  const snap = await adminDb.collection(PACKAGES).get();
+  let rows = snap.docs.map((d) => fromDoc<Omit<AddonPackage, "id">>(d) as AddonPackage);
+  if (opts?.activeOnly) rows = rows.filter((r) => r.active);
+  rows.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0) || a.name.localeCompare(b.name));
+  return rows;
 }
 
 export async function getAddonPackage(id: string): Promise<AddonPackage | null> {

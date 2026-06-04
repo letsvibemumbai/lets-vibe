@@ -29,7 +29,18 @@ export function todayString(): string {
 }
 
 function toBooking(id: string, data: FirebaseFirestore.DocumentData): Booking {
-  return { id, ...data } as Booking;
+  // Normalize Firestore Timestamp fields to millis so the booking is a plain,
+  // serializable object — required when passed from Server to Client Components
+  // (e.g. the booking detail / edit form).
+  const out: Booking = {
+    ...(data as Omit<Booking, "id">),
+    id,
+    createdAt: timestampToMillis(data.createdAt),
+    updatedAt: timestampToMillis(data.updatedAt),
+  };
+  if (data.refundedAt != null) out.refundedAt = timestampToMillis(data.refundedAt);
+  if (data.cancelledAt != null) out.cancelledAt = timestampToMillis(data.cancelledAt);
+  return out;
 }
 
 // NOTE: these queries deliberately avoid a secondary `.orderBy("startTime")`
