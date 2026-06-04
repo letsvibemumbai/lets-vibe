@@ -20,6 +20,7 @@ import {
   getAddonItem,
   getAddonPackage,
 } from "@/lib/db/addons.server";
+import { customerDocRef, writeCustomerUpsert } from "@/lib/db/customers.server";
 import type {
   Availability,
   Slot,
@@ -306,6 +307,9 @@ export async function confirmBookingDirect(
       : null;
     const memberSnap = memberRef ? await tx.get(memberRef) : null;
 
+    const customerRef = customerDocRef(payload.customer.phone);
+    const customerSnap = await tx.get(customerRef);
+
     // --- slot guard ---
     const existing = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Booking);
     if (
@@ -341,6 +345,15 @@ export async function confirmBookingDirect(
       }
     }
 
+    // --- create / link the phone-keyed customer account ---
+    const customerId = writeCustomerUpsert(tx, customerSnap, {
+      phone: payload.customer.phone,
+      name: payload.customer.name,
+      email: payload.customer.email ?? null,
+      date: payload.date,
+      source: "online",
+    });
+
     // --- write the booking ---
     const ref = adminDb.collection(COLLECTION).doc();
     tx.set(ref, {
@@ -353,6 +366,7 @@ export async function confirmBookingDirect(
       customerPhone: payload.customer.phone,
       customerEmail: payload.customer.email ?? null,
       customerUid: payload.customerUid ?? null,
+      customerId,
       guestCount: payload.customer.guestCount,
       addOns: buildPersistedAddOns(payload.addOns, resolvedSelections),
       amount,

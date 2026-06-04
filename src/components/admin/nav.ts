@@ -9,6 +9,7 @@ import {
   Monitor,
   PackagePlus,
   Receipt,
+  Users,
   type LucideIcon,
 } from "lucide-react";
 
@@ -22,6 +23,7 @@ export type NavItem = {
 export const ADMIN_NAV: readonly NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/bookings", label: "Bookings", icon: ListChecks },
+  { href: "/admin/customers", label: "Customers", icon: Users },
   { href: "/admin/bookings/new", label: "New Booking", icon: CalendarPlus },
   { href: "/admin/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/admin/expenses", label: "Expenses", icon: Receipt },

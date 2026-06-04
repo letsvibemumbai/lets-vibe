@@ -59,6 +59,13 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // ----- customers (CRM, keyed by phone) -----
+    // Created/updated server-side via the Admin SDK during booking creation
+    // (which bypasses these rules). No direct client access.
+    match /customers/{phone} {
+      allow read, write: if isAdmin();
+    }
+
     // ----- settings (membership config, etc.) -----
     // Public read so the booking/account UI can show current terms; admin write.
     match /settings/{docId} {

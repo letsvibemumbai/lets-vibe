@@ -48,6 +48,9 @@ export type Booking = {
   /** Firebase Auth uid of the signed-in guest who made the booking, if any.
    * Links the booking to a user account (the /account dashboard). */
   customerUid?: string;
+  /** Links the booking to a phone-keyed Customer record (CRM). Equals the
+   * customer's phone number (the Customer doc id). */
+  customerId?: string;
   guestCount: number;
   /**
    * Add-ons on a booking. `selections` is the canonical list of items and
@@ -162,6 +165,26 @@ export type Membership = {
   price: number;
   requestedAt: number;
   confirmedAt?: number;
+  createdAt: number;
+  updatedAt: number;
+};
+
+/**
+ * A customer profile, keyed by phone number (the doc id). Created the first
+ * time a phone number is seen on any booking, then linked + updated on every
+ * subsequent booking — so repeat customers are tracked automatically.
+ */
+export type Customer = {
+  /** Doc id — equals the normalized 10-digit phone. */
+  id: string;
+  phone: string;
+  name: string;
+  email?: string;
+  /** Total bookings ever made under this phone. */
+  totalBookings: number;
+  firstBookingDate?: string;
+  lastBookingDate?: string;
+  lastSource?: BookingSource;
   createdAt: number;
   updatedAt: number;
 };

@@ -27,6 +27,7 @@ import {
   getAddonItem,
   getAddonPackage,
 } from "@/lib/db/addons.server";
+import { customerDocRef, writeCustomerUpsert } from "@/lib/db/customers.server";
 import type {
   Booking,
   BookingAddonSelection,
@@ -280,13 +281,18 @@ export async function createOfflineBookingAction(
     timeToMinutes(payload.startTime) + payload.duration * 60,
   );
 
+  const customerRef = customerDocRef(payload.customer.phone);
+
   const bookingId = await adminDb.runTransaction(async (tx) => {
+    // --- reads first ---
     const snap = await tx.get(
       adminDb
         .collection(COLLECTION)
         .where("screenId", "==", payload.screenId)
         .where("date", "==", payload.date),
     );
+    const customerSnap = await tx.get(customerRef);
+
     const existing = snap.docs.map(
       (d) => ({ id: d.id, ...d.data() }) as Booking,
     );
@@ -302,6 +308,15 @@ export async function createOfflineBookingAction(
       throw new Error("SLOT_UNAVAILABLE");
     }
 
+    // --- create / link the phone-keyed customer account ---
+    const customerId = writeCustomerUpsert(tx, customerSnap, {
+      phone: payload.customer.phone,
+      name: payload.customer.name,
+      email: payload.customer.email ?? null,
+      date: payload.date,
+      source: "offline",
+    });
+
     const ref = adminDb.collection(COLLECTION).doc();
     tx.set(ref, {
       screenId: payload.screenId,
@@ -312,6 +327,7 @@ export async function createOfflineBookingAction(
       customerName: payload.customer.name,
       customerPhone: payload.customer.phone,
       customerEmail: payload.customer.email ?? null,
+      customerId,
       guestCount: payload.customer.guestCount,
       addOns: {
         decorations: payload.addOns.decorations ?? null,
