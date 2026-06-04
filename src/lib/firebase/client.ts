@@ -14,6 +14,18 @@ const firebaseConfig = {
 
 const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-export const auth: Auth = getAuth(app);
-export const db: Firestore = getFirestore(app);
+// Only initialize Auth/Firestore in the browser. During `next build` (static
+// export / SSR prerender) there is no `window`, and the NEXT_PUBLIC_* env vars
+// may be absent — calling getAuth() there throws `auth/invalid-api-key` and
+// fails the build (e.g. when prerendering /_not-found). These client services
+// are only ever used from client-side effects/handlers, so a browser-only
+// init is safe and keeps the build deterministic regardless of env.
+const isBrowser = typeof window !== "undefined";
+
+export const auth: Auth = isBrowser
+  ? getAuth(app)
+  : (undefined as unknown as Auth);
+export const db: Firestore = isBrowser
+  ? getFirestore(app)
+  : (undefined as unknown as Firestore);
 export { app };
