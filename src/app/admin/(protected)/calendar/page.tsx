@@ -4,6 +4,7 @@ import {
   todayString,
 } from "@/lib/db/bookings.server";
 import { AdminCalendar } from "@/components/admin/calendar/AdminCalendar";
+import { AvailabilitySearch } from "@/components/admin/calendar/AvailabilitySearch";
 
 export const metadata = { title: "Calendar · Let's Vibe Admin" };
 export const dynamic = "force-dynamic";
@@ -33,6 +34,7 @@ export default async function AdminCalendarPage({
           to see everything on it.
         </p>
       </header>
+      <AvailabilitySearch />
       <AdminCalendar
         initialMonth={initialMonth}
         today={today}
