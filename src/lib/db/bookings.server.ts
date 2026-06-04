@@ -32,13 +32,24 @@ function toBooking(id: string, data: FirebaseFirestore.DocumentData): Booking {
   return { id, ...data } as Booking;
 }
 
+// NOTE: these queries deliberately avoid a secondary `.orderBy("startTime")`
+// (and `screenId`+`date` / `date-range`+`startTime` combinations) so they need
+// no Firestore composite indexes. Ordering is done in memory — booking volumes
+// per day/range are small enough that this is cheaper than maintaining indexes.
+
+function sortByDateTime(rows: Booking[]): Booking[] {
+  rows.sort(
+    (a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime),
+  );
+  return rows;
+}
+
 export async function getBookingsByDate(date: string): Promise<Booking[]> {
   const snap = await adminDb
     .collection(COLLECTION)
     .where("date", "==", date)
-    .orderBy("startTime")
     .get();
-  return snap.docs.map((d) => toBooking(d.id, d.data()));
+  return sortByDateTime(snap.docs.map((d) => toBooking(d.id, d.data())));
 }
 
 export async function getBookingsForScreenDate(
@@ -49,9 +60,8 @@ export async function getBookingsForScreenDate(
     .collection(COLLECTION)
     .where("screenId", "==", screenId)
     .where("date", "==", date)
-    .orderBy("startTime")
     .get();
-  return snap.docs.map((d) => toBooking(d.id, d.data()));
+  return sortByDateTime(snap.docs.map((d) => toBooking(d.id, d.data())));
 }
 
 export async function getBookingsInRange(
@@ -62,10 +72,8 @@ export async function getBookingsInRange(
     .collection(COLLECTION)
     .where("date", ">=", startDate)
     .where("date", "<=", endDate)
-    .orderBy("date")
-    .orderBy("startTime")
     .get();
-  return snap.docs.map((d) => toBooking(d.id, d.data()));
+  return sortByDateTime(snap.docs.map((d) => toBooking(d.id, d.data())));
 }
 
 export async function getBookingsForMonth(year: number, month: number): Promise<Booking[]> {
@@ -124,16 +132,20 @@ export async function listBookings(
   page: number,
   pageSize: number,
 ): Promise<BookingListResult> {
-  let q: FirebaseFirestore.Query = adminDb.collection(COLLECTION);
-  if (filters.screenId) q = q.where("screenId", "==", filters.screenId);
-  if (filters.status) q = q.where("status", "==", filters.status);
-  if (filters.source) q = q.where("source", "==", filters.source);
-  if (filters.dateFrom) q = q.where("date", ">=", filters.dateFrom);
-  if (filters.dateTo) q = q.where("date", "<=", filters.dateTo);
-  q = q.orderBy("date", "desc").orderBy("startTime", "desc");
-
-  const snap = await q.get();
+  // Index-free: fetch the collection and apply all filters + ordering in
+  // memory. Avoids composite-index requirements for arbitrary filter combos.
+  const snap = await adminDb.collection(COLLECTION).get();
   let rows = snap.docs.map((d) => toBooking(d.id, d.data()));
+
+  if (filters.screenId) rows = rows.filter((b) => b.screenId === filters.screenId);
+  if (filters.status) rows = rows.filter((b) => b.status === filters.status);
+  if (filters.source) rows = rows.filter((b) => b.source === filters.source);
+  if (filters.dateFrom) rows = rows.filter((b) => b.date >= filters.dateFrom!);
+  if (filters.dateTo) rows = rows.filter((b) => b.date <= filters.dateTo!);
+  rows.sort(
+    (a, b) =>
+      b.date.localeCompare(a.date) || b.startTime.localeCompare(a.startTime),
+  );
 
   const needle = filters.query?.trim().toLowerCase();
   if (needle) {
