@@ -85,3 +85,44 @@ export async function listCustomers(): Promise<Customer[]> {
   );
   return rows;
 }
+
+/**
+ * Customers with `totalBookings` + `lastBookingDate` derived LIVE from the
+ * bookings collection, counting only active (non-cancelled) bookings by phone.
+ * This is the source of truth for the admin Customers view — it never drifts
+ * the way a stored counter can when bookings are cancelled or status changes.
+ */
+export async function listCustomersWithStats(): Promise<Customer[]> {
+  const [customers, bookingsSnap] = await Promise.all([
+    listCustomers(),
+    adminDb.collection("bookings").get(),
+  ]);
+
+  const stats = new Map<string, { count: number; last?: string }>();
+  for (const d of bookingsSnap.docs) {
+    const b = d.data();
+    if (b.status === "cancelled") continue;
+    const phone: string | undefined = b.customerPhone;
+    if (!phone) continue;
+    const cur = stats.get(phone) ?? { count: 0 };
+    cur.count += 1;
+    if (b.date && (!cur.last || b.date > cur.last)) cur.last = b.date;
+    stats.set(phone, cur);
+  }
+
+  const withStats = customers.map((c) => {
+    const s = stats.get(c.phone);
+    return {
+      ...c,
+      totalBookings: s?.count ?? 0,
+      lastBookingDate: s?.last ?? c.lastBookingDate,
+    };
+  });
+  // Most recent active booking first; zero-active customers sink to the bottom.
+  withStats.sort(
+    (a, b) =>
+      b.totalBookings - a.totalBookings ||
+      (b.lastBookingDate ?? "").localeCompare(a.lastBookingDate ?? ""),
+  );
+  return withStats;
+}

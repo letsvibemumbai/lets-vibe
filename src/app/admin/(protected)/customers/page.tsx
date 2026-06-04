@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
-import { listCustomers } from "@/lib/db/customers.server";
+import { listCustomersWithStats } from "@/lib/db/customers.server";
 
 export const metadata = { title: "Customers · Let's Vibe Admin" };
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ function fmtDate(d?: string): string {
 }
 
 export default async function AdminCustomersPage() {
-  const customers = await listCustomers();
+  const customers = await listCustomersWithStats();
   const repeat = customers.filter((c) => c.totalBookings > 1).length;
 
   return (
