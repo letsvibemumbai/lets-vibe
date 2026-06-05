@@ -8,6 +8,7 @@ import { FaqAccordion } from "@/components/site/FaqAccordion";
 import { HouseRules } from "@/components/site/HouseRules";
 import { GsapManifesto } from "@/components/site/GsapManifesto";
 import { Magnetic } from "@/components/ui-vibe/Magnetic";
+import { WaterfallText } from "@/components/ui-vibe/WaterfallText";
 import { AvailabilityChecker } from "@/components/booking/AvailabilityChecker";
 import { PublicShell } from "@/components/site/PublicShell";
 import {
@@ -252,9 +253,12 @@ export default function Home() {
               <header className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end lg:gap-16">
                 <div className="lg:col-span-7">
                   <SectionLabel className="mb-6">03 / Pricing</SectionLabel>
-                  <DisplayHeading as="h2" size="lg">
-                    Time, by the hour.
-                  </DisplayHeading>
+                  <WaterfallText
+                    as="h2"
+                    text="Time, by the hour."
+                    className="font-display text-5xl leading-[0.98] tracking-[-0.02em] text-ink sm:text-6xl md:text-7xl"
+                    style={{ fontWeight: 300 }}
+                  />
                 </div>
                 <p className="text-[15px] leading-[1.7] text-muted lg:col-span-5">
                   Pricing is per room, not per head. Starting prices below — the

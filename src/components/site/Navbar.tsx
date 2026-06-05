@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Menu, User, X } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { RollingText } from "@/components/ui-vibe/RollingText";
 import { QuietButton } from "@/components/editorial";
 import {
   Sheet,
@@ -54,7 +55,7 @@ export function Navbar() {
               data-cursor="cta"
               className="group relative text-[11px] font-medium uppercase tracking-[0.22em] text-ink/75 transition-colors hover:text-ink"
             >
-              {link.label}
+              <RollingText>{link.label}</RollingText>
               <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-ink transition-transform duration-300 group-hover:scale-x-100" />
             </Link>
           ))}

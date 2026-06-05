@@ -1,4 +1,5 @@
-import { DisplayHeading, SectionLabel } from "@/components/editorial";
+import { SectionLabel } from "@/components/editorial";
+import { WaterfallText } from "@/components/ui-vibe/WaterfallText";
 
 type Rule = {
   index: string;
@@ -42,9 +43,12 @@ export function HouseRules() {
             <SectionLabel tone="accent" className="mb-5">
               Good to know
             </SectionLabel>
-            <DisplayHeading as="h2" size="lg">
-              House rules.
-            </DisplayHeading>
+            <WaterfallText
+              as="h2"
+              text="House rules."
+              className="font-display text-5xl leading-[0.98] tracking-[-0.02em] text-ink sm:text-6xl md:text-7xl"
+              style={{ fontWeight: 300 }}
+            />
           </div>
           <p className="text-[15px] leading-[1.7] text-muted lg:col-span-5">
             A calm, private evening for the two of you. A few simple things keep
