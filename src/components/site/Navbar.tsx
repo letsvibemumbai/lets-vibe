@@ -43,7 +43,7 @@ export function Navbar() {
       )}
     >
       <div className="mx-auto flex h-16 max-w-[1280px] items-center justify-between gap-6 px-5 sm:px-8 lg:px-12">
-        <Logo className="shrink-0" imgClassName="text-[1.35rem]" />
+        <Logo className="shrink-0" imgClassName="h-9 w-auto sm:h-10" />
 
         <nav className="hidden items-center gap-9 md:flex">
           {NAV_LINKS.map((link) => (

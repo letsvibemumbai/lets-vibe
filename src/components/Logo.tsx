@@ -1,16 +1,17 @@
+import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /**
- * Brand wordmark. Cinematic V4 — a refined Playfair Display lockup, "Let's"
- * in warm ink with "Vibe" in gold italic. Pure type, no raster sticker, so it
- * sits cleanly on the dark cinema palette and scales crisply everywhere.
+ * Brand logo — the official "Let's Vibe" mark (public/logo.png, a transparent
+ * PNG generated from the brand PDF). Sits on any background. Height is driven
+ * by `imgClassName` (e.g. "h-9 w-auto"); the default suits the navbar.
  */
 type Props = {
   alt?: string;
   href?: string | null;
   className?: string;
-  /** Tailwind text-size utility for the wordmark (defaults to a navbar size). */
+  /** Tailwind sizing utility for the image (default: navbar height). */
   imgClassName?: string;
 };
 
@@ -21,15 +22,15 @@ export function Logo({
   imgClassName,
 }: Props) {
   const inner = (
-    <span
-      aria-label={alt}
-      className={cn(
-        "font-display text-[1.4rem] font-medium leading-none tracking-[-0.01em] text-ink",
-        imgClassName,
-      )}
-    >
-      Let&rsquo;s <span className="italic text-accent">Vibe</span>
-    </span>
+    <Image
+      src="/logo.png"
+      alt={alt}
+      width={1600}
+      height={541}
+      priority
+      unoptimized
+      className={cn("h-10 w-auto", imgClassName)}
+    />
   );
 
   if (href === null) {

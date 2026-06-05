@@ -13,7 +13,7 @@ export default function AccountLayout({
     <div className="dark relative min-h-screen bg-cream font-body text-ink">
       <header className="sticky top-0 z-40 border-b border-hairline bg-cream/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-[1100px] items-center justify-between gap-4 px-5 sm:px-8 lg:px-12">
-          <Logo imgClassName="text-[1.3rem]" />
+          <Logo imgClassName="h-9 w-auto sm:h-10" />
           <Link
             href="/"
             className="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.22em] text-ink/65 transition-colors hover:text-ink"
