@@ -37,9 +37,9 @@ export default async function AdminCustomersPage() {
         </div>
       </header>
 
-      <section className="rounded-3xl bg-card p-2 ring-1 ring-white/10 sm:p-3">
+      <section className="rounded-3xl bg-card p-2 ring-1 ring-hairline sm:p-3">
         {customers.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-white/12 bg-white/[0.03] px-6 py-12 text-center text-sm text-foreground/55">
+          <p className="rounded-2xl border border-dashed border-hairline-strong bg-foreground/[0.03] px-6 py-12 text-center text-sm text-foreground/55">
             No customers yet. They&rsquo;re created automatically from bookings.
           </p>
         ) : (
@@ -55,7 +55,7 @@ export default async function AdminCustomersPage() {
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.06]">
+              <tbody className="divide-y divide-hairline">
                 {customers.map((c) => (
                   <tr key={c.id} className="text-foreground/90">
                     <td className="px-4 py-3">

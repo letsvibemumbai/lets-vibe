@@ -18,7 +18,7 @@ type Props = {
 
 export function RecentBookingsCard({ bookings }: Props) {
   return (
-    <section className="rounded-3xl bg-card p-6 ring-1 ring-white/10 ">
+    <section className="rounded-3xl bg-card p-6 ring-1 ring-hairline ">
       <header className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Receipt className="h-5 w-5 text-foreground/70" />
@@ -34,13 +34,13 @@ export function RecentBookingsCard({ bookings }: Props) {
 
       <div className="mt-4">
         {bookings.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-white/12 bg-cream/40 px-6 py-10 text-center text-sm text-foreground/55">
+          <p className="rounded-2xl border border-dashed border-hairline-strong bg-cream/40 px-6 py-10 text-center text-sm text-foreground/55">
             No bookings yet.
           </p>
         ) : (
           <Table>
             <TableHeader>
-              <TableRow className="border-white/10 [&_th]:text-[11px] [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-foreground/45">
+              <TableRow className="border-hairline [&_th]:text-[11px] [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-foreground/45">
                 <TableHead>Customer</TableHead>
                 <TableHead>Screen</TableHead>
                 <TableHead>Date · Time</TableHead>
@@ -52,7 +52,7 @@ export function RecentBookingsCard({ bookings }: Props) {
               {bookings.map((b) => (
                 <TableRow
                   key={b.id}
-                  className="border-white/10 hover:bg-cream/50"
+                  className="border-hairline hover:bg-cream/50"
                 >
                   <TableCell>
                     <Link

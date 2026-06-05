@@ -238,7 +238,7 @@ export function OfflineBookingForm({ screens, items, packages }: Props) {
                       "rounded-full px-3 py-1.5 text-sm font-medium ring-1 transition-colors",
                       startTime === s.startTime
                         ? "bg-foreground text-cream ring-foreground"
-                        : "bg-card ring-white/15 hover:bg-cream",
+                        : "bg-card ring-hairline-strong hover:bg-cream",
                     )}
                   >
                     {s.startTime}–{s.endTime}
@@ -362,7 +362,7 @@ export function OfflineBookingForm({ screens, items, packages }: Props) {
         />
       </Section>
 
-      <div className="flex items-center justify-between rounded-3xl bg-card p-4 ring-1 ring-white/10">
+      <div className="flex items-center justify-between rounded-3xl bg-card p-4 ring-1 ring-hairline">
         <div>
           <p className="text-xs uppercase tracking-wider text-foreground/55">
             Total
@@ -394,7 +394,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-3xl bg-card p-6 ring-1 ring-white/10 ">
+    <section className="rounded-3xl bg-card p-6 ring-1 ring-hairline ">
       <header className="mb-4 flex items-center gap-2 text-foreground/70">
         {icon}
         <h2 className="text-sm font-semibold uppercase tracking-wider">

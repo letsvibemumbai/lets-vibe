@@ -24,7 +24,7 @@ export function RomanticSection() {
   return (
     <section
       ref={ref}
-      className="relative isolate overflow-hidden bg-[#08080C] py-40 text-ink md:py-56"
+      className="dark relative isolate overflow-hidden bg-[#08080C] py-40 text-ink md:py-56"
     >
       <motion.div
         aria-hidden

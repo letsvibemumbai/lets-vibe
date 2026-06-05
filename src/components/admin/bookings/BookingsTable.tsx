@@ -146,15 +146,15 @@ export function BookingsTable({ rows, filters }: Props) {
         </div>
       </div>
 
-      <div className="rounded-3xl bg-card p-2 ring-1 ring-white/10 ">
+      <div className="rounded-3xl bg-card p-2 ring-1 ring-hairline ">
         {rows.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-white/12 bg-cream/40 px-6 py-12 text-center text-sm text-foreground/55">
+          <p className="rounded-2xl border border-dashed border-hairline-strong bg-cream/40 px-6 py-12 text-center text-sm text-foreground/55">
             No bookings match these filters.
           </p>
         ) : (
           <Table>
             <TableHeader>
-              <TableRow className="border-white/10 [&_th]:text-[11px] [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-foreground/45">
+              <TableRow className="border-hairline [&_th]:text-[11px] [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-foreground/45">
                 <TableHead className="w-10">
                   <input
                     type="checkbox"
@@ -181,7 +181,7 @@ export function BookingsTable({ rows, filters }: Props) {
                 <TableRow
                   key={b.id}
                   data-state={selected.has(b.id) ? "selected" : undefined}
-                  className="border-white/10"
+                  className="border-hairline"
                 >
                   <TableCell className="w-10">
                     <input

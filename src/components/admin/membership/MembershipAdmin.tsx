@@ -18,8 +18,8 @@ type Props = {
 const STATUS_STYLES: Record<MembershipStatus, string> = {
   active: "bg-emerald-500/15 text-emerald-300",
   pending: "bg-accent/15 text-accent",
-  expired: "bg-white/10 text-foreground/60",
-  none: "bg-white/10 text-foreground/60",
+  expired: "bg-foreground/10 text-foreground/60",
+  none: "bg-foreground/10 text-foreground/60",
 };
 
 function fmtDate(ms: number): string {
@@ -77,7 +77,7 @@ export function MembershipAdmin({ config, members }: Props) {
   return (
     <div className="mx-auto max-w-4xl space-y-8">
       {/* Config */}
-      <section className="rounded-3xl bg-card p-6 ring-1 ring-white/10  sm:p-8">
+      <section className="rounded-3xl bg-card p-6 ring-1 ring-hairline  sm:p-8">
         <div className="flex items-center gap-3">
           <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-accent/15 text-accent">
             <Crown className="h-5 w-5" />
@@ -124,7 +124,7 @@ export function MembershipAdmin({ config, members }: Props) {
           Programme is active (members can join)
         </label>
 
-        <p className="mt-4 rounded-2xl bg-white/[0.04] px-4 py-3 text-[13px] text-foreground/70">
+        <p className="mt-4 rounded-2xl bg-foreground/[0.04] px-4 py-3 text-[13px] text-foreground/70">
           New members get <strong>{discountPercent}%</strong> off their next{" "}
           <strong>{discountedBookings}</strong> bookings after paying ₹
           {price.toLocaleString("en-IN")}.
@@ -144,7 +144,7 @@ export function MembershipAdmin({ config, members }: Props) {
       </section>
 
       {/* Members */}
-      <section className="rounded-3xl bg-card p-6 ring-1 ring-white/10  sm:p-8">
+      <section className="rounded-3xl bg-card p-6 ring-1 ring-hairline  sm:p-8">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-2xl text-foreground">Members</h2>
           {pendingCount > 0 && (
@@ -155,11 +155,11 @@ export function MembershipAdmin({ config, members }: Props) {
         </div>
 
         {members.length === 0 ? (
-          <p className="mt-6 rounded-2xl border border-dashed border-white/12 bg-white/[0.03] px-6 py-10 text-center text-sm text-foreground/55">
+          <p className="mt-6 rounded-2xl border border-dashed border-hairline-strong bg-foreground/[0.03] px-6 py-10 text-center text-sm text-foreground/55">
             No membership requests yet.
           </p>
         ) : (
-          <ul className="mt-5 divide-y divide-white/10">
+          <ul className="mt-5 divide-y divide-hairline">
             {members.map((m) => {
               const busy = acting && actingUid === m.uid;
               return (
@@ -207,7 +207,7 @@ export function MembershipAdmin({ config, members }: Props) {
                         onClick={() =>
                           run(m.uid, revokeMembershipAction, "Membership revoked")
                         }
-                        className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-foreground/60 ring-1 ring-white/15 transition-colors hover:bg-white/5 disabled:opacity-60"
+                        className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-foreground/60 ring-1 ring-hairline-strong transition-colors hover:bg-foreground/5 disabled:opacity-60"
                       >
                         <X className="h-3.5 w-3.5" />
                         Revoke
@@ -248,7 +248,7 @@ function NumberField({
         min={min}
         max={max}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-11 w-full rounded-xl border border-white/12 bg-card px-3 text-sm text-foreground focus:border-foreground/40 focus:outline-none"
+        className="h-11 w-full rounded-xl border border-hairline-strong bg-card px-3 text-sm text-foreground focus:border-foreground/40 focus:outline-none"
       />
     </label>
   );

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { CalendarPlus, Menu } from "lucide-react";
 import { Sidebar } from "@/components/admin/Sidebar";
 import { getPageTitle } from "@/components/admin/nav";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 type Props = {
   email: string;
@@ -26,7 +27,7 @@ export function AdminShell({ email, children }: Props) {
   const pageTitle = getPageTitle(pathname);
 
   return (
-    <div className="dark flex min-h-screen bg-background font-body text-foreground">
+    <div className="flex min-h-screen bg-background font-body text-foreground">
       <Sidebar
         email={email}
         mobileOpen={mobileOpen}
@@ -58,13 +59,16 @@ export function AdminShell({ email, children }: Props) {
               </div>
             </div>
           </div>
-          <Link
-            href="/admin/bookings/new"
-            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.14em] text-accent-foreground transition-transform hover:scale-[1.03]"
-          >
-            <CalendarPlus className="h-4 w-4" strokeWidth={2} />
-            <span className="hidden sm:inline">New Booking</span>
-          </Link>
+          <div className="flex shrink-0 items-center gap-2">
+            <ThemeToggle tone="admin" />
+            <Link
+              href="/admin/bookings/new"
+              className="inline-flex shrink-0 items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.14em] text-accent-foreground transition-transform hover:scale-[1.03]"
+            >
+              <CalendarPlus className="h-4 w-4" strokeWidth={2} />
+              <span className="hidden sm:inline">New Booking</span>
+            </Link>
+          </div>
         </header>
         <main className="flex-1 px-4 py-6 sm:px-8 sm:py-10">{children}</main>
       </div>

@@ -186,12 +186,14 @@
   --secondary-foreground: #0A0A0A;
   --muted: #FFF4E0;
   --muted-foreground: oklch(0.45 0 0);
-  --accent: #FFD93D;
-  --accent-foreground: #0A0A0A;
+  /* Light-theme accent — a readable gold (matches the dark theme's spotlight
+     gold for brand consistency across both modes). */
+  --accent: #B8860B;
+  --accent-foreground: #FFFFFF;
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.92 0 0);
   --input: oklch(0.92 0 0);
-  --ring: #FF4FA3;
+  --ring: #B8860B;
   --chart-1: #FF4FA3;
   --chart-2: #FFD93D;
   --chart-3: #FF7A00;
@@ -257,19 +259,26 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply text-foreground antialiased;
-    /* Dark cinema backdrop by default so there is NO flash of a light theme
-       before the public/booking `.dark` wrappers paint. The admin shell paints
-       its own full light background (bg-vibe-cream) over this. */
-    background-color: #0B0B0F;
+    /* Theme-driven background — next-themes sets the `.dark` class on <html>
+       before paint, so there's no flash. Light theme uses the cream surface,
+       dark uses the cinema black. */
+    @apply bg-background text-foreground antialiased;
     font-family: var(--font-body), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   html {
     font-family: var(--font-body), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-    /* Dark page backdrop so mobile overscroll / rubber-banding never flashes a
-       light bar on the public + booking pages. The admin shell paints its own
-       full light background (bg-vibe-cream) over this. */
-    background-color: #0B0B0F;
+    background-color: var(--background);
+  }
+  /* Fixed page wash behind public pages — theme-aware. */
+  .continuous-bg {
+    background:
+      radial-gradient(120% 80% at 50% -10%, rgba(184, 134, 11, 0.08) 0%, rgba(184, 134, 11, 0) 42%),
+      linear-gradient(180deg, #faf7f2 0%, #f6f1e8 50%, #faf7f2 100%);
+  }
+  .dark .continuous-bg {
+    background:
+      radial-gradient(120% 80% at 50% -10%, rgba(217, 169, 76, 0.1) 0%, rgba(217, 169, 76, 0) 42%),
+      linear-gradient(180deg, #0b0b0f 0%, #0c0c12 50%, #08080c 100%);
   }
   /* Reduced motion: kill the show-off animations for users who want calm. */
   @media (prefers-reduced-motion: reduce) {

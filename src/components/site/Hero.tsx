@@ -31,7 +31,7 @@ export function Hero() {
   return (
     <section
       ref={root}
-      className="relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-[#08080C] text-ink"
+      className="dark relative isolate flex min-h-[100svh] flex-col overflow-hidden bg-[#08080C] text-ink"
     >
       {/* Photo */}
       <div aria-hidden className="absolute inset-0 -z-20 overflow-hidden">

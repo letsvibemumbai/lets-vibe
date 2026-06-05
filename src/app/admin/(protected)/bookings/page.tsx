@@ -147,7 +147,7 @@ function PageLink({
   iconRight?: boolean;
 }) {
   const className =
-    "inline-flex h-9 items-center gap-1.5 rounded-full bg-card px-3 text-sm font-medium ring-1 ring-white/10 hover:bg-cream";
+    "inline-flex h-9 items-center gap-1.5 rounded-full bg-card px-3 text-sm font-medium ring-1 ring-hairline hover:bg-cream";
   if (disabled) {
     return (
       <span

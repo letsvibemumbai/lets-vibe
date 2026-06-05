@@ -62,9 +62,9 @@ export default async function AdminReportsPage({
 
       <div
         data-print-page
-        className="space-y-6 rounded-3xl bg-card p-6 ring-1 ring-white/10 "
+        className="space-y-6 rounded-3xl bg-card p-6 ring-1 ring-hairline "
       >
-        <header className="border-b border-white/12 pb-4">
+        <header className="border-b border-hairline-strong pb-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-foreground/50">
             Let&rsquo;s Vibe · Monthly report
           </p>
@@ -123,7 +123,7 @@ export default async function AdminReportsPage({
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-white/10 text-left text-[11px] uppercase tracking-wider text-foreground/45">
+                <tr className="border-b border-hairline text-left text-[11px] uppercase tracking-wider text-foreground/45">
                   <th className="py-2 pr-3 font-medium">Date</th>
                   <th className="py-2 pr-3 font-medium">Bookings</th>
                   <th className="py-2 pr-3 font-medium">Revenue</th>
@@ -133,7 +133,7 @@ export default async function AdminReportsPage({
               </thead>
               <tbody>
                 {report.daily.map((d) => (
-                  <tr key={d.date} className="border-b border-white/10">
+                  <tr key={d.date} className="border-b border-hairline">
                     <td className="py-1.5 pr-3 text-foreground/75">{d.date}</td>
                     <td className="py-1.5 pr-3 text-foreground/75">
                       {d.bookings}
@@ -164,7 +164,7 @@ export default async function AdminReportsPage({
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-white/10 text-left text-[11px] uppercase tracking-wider text-foreground/45">
+                  <tr className="border-b border-hairline text-left text-[11px] uppercase tracking-wider text-foreground/45">
                     <th className="py-2 pr-3 font-medium">Date</th>
                     <th className="py-2 pr-3 font-medium">Time</th>
                     <th className="py-2 pr-3 font-medium">Screen</th>
@@ -180,7 +180,7 @@ export default async function AdminReportsPage({
                     const s = STATUS_STYLES[b.status];
                     const addOns = summarizeAddOns(b.addOns);
                     return (
-                      <tr key={b.id} className="border-b border-white/10">
+                      <tr key={b.id} className="border-b border-hairline">
                         <td className="py-1.5 pr-3 text-foreground/75">
                           {b.date}
                         </td>
@@ -241,7 +241,7 @@ export default async function AdminReportsPage({
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-white/10 text-left text-[11px] uppercase tracking-wider text-foreground/45">
+                  <tr className="border-b border-hairline text-left text-[11px] uppercase tracking-wider text-foreground/45">
                     <th className="py-2 pr-3 font-medium">Date</th>
                     <th className="py-2 pr-3 font-medium">Category</th>
                     <th className="py-2 pr-3 font-medium">Description</th>
@@ -251,7 +251,7 @@ export default async function AdminReportsPage({
                 </thead>
                 <tbody>
                   {report.expenses.map((e) => (
-                    <tr key={e.id} className="border-b border-white/10">
+                    <tr key={e.id} className="border-b border-hairline">
                       <td className="py-1.5 pr-3 text-foreground/75">
                         {e.date}
                       </td>
@@ -289,7 +289,7 @@ function Section({
 } & React.HTMLAttributes<HTMLElement>) {
   return (
     <section
-      className="rounded-2xl border border-white/10 p-5"
+      className="rounded-2xl border border-hairline p-5"
       {...rest}
     >
       <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-foreground/70">
@@ -338,7 +338,7 @@ function BucketTable({
           {data.map((d) => {
             const pct = total ? Math.round((d.value / total) * 100) : 0;
             return (
-              <tr key={d.key} className="border-b border-white/10">
+              <tr key={d.key} className="border-b border-hairline">
                 <td className="py-1.5 text-foreground/75">{d.label}</td>
                 <td className="py-1.5 text-right text-foreground">
                   {formatINR(d.value)}
@@ -357,7 +357,7 @@ function BucketTable({
 
 function EmptyRow({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-2xl border border-dashed border-white/12 bg-cream/40 px-6 py-8 text-center text-sm text-foreground/55">
+    <p className="rounded-2xl border border-dashed border-hairline-strong bg-cream/40 px-6 py-8 text-center text-sm text-foreground/55">
       {children}
     </p>
   );

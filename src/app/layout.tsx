@@ -8,6 +8,7 @@ import {
 } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { FirebaseAnalytics } from "@/components/FirebaseAnalytics";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
 /**
@@ -111,13 +112,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${body.variable} ${display.variable} ${serif.variable} ${wordmark.variable} ${jakarta.variable} ${hand.variable} antialiased`}
       >
-        {children}
-        <Toaster position="top-center" richColors />
-        <FirebaseAnalytics />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem={false}
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster position="top-center" richColors />
+          <FirebaseAnalytics />
+        </ThemeProvider>
       </body>
     </html>
   );

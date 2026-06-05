@@ -148,7 +148,7 @@ export function PackageForm({ pkg, items }: Props) {
       {kind === "bundle" ? (
         <Section title="Items in this bundle">
           {items.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-white/12 bg-cream/40 px-4 py-6 text-center text-sm text-foreground/55">
+            <p className="rounded-2xl border border-dashed border-hairline-strong bg-cream/40 px-4 py-6 text-center text-sm text-foreground/55">
               No items yet. Create some à la carte items first.
             </p>
           ) : (
@@ -158,7 +158,7 @@ export function PackageForm({ pkg, items }: Props) {
                 return (
                   <li
                     key={it.id}
-                    className="flex items-start gap-3 rounded-2xl border border-white/10 bg-card p-3"
+                    className="flex items-start gap-3 rounded-2xl border border-hairline bg-card p-3"
                   >
                     <input
                       type="checkbox"
@@ -326,7 +326,7 @@ function KindOption({
         "flex flex-col items-start gap-1 rounded-2xl border-2 p-4 text-left transition-colors " +
         (selected
           ? "border-foreground bg-foreground/5"
-          : "border-white/12 bg-card hover:border-foreground/40")
+          : "border-hairline-strong bg-card hover:border-foreground/40")
       }
     >
       <span className="text-sm font-semibold text-foreground">{title}</span>
@@ -337,7 +337,7 @@ function KindOption({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-3xl bg-card p-6 ring-1 ring-white/10 ">
+    <section className="rounded-3xl bg-card p-6 ring-1 ring-hairline ">
       <header className="mb-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground/70">
           {title}

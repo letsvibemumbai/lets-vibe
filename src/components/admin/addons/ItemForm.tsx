@@ -220,7 +220,7 @@ export function ItemForm({ item }: Props) {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-3xl bg-card p-6 ring-1 ring-white/10 ">
+    <section className="rounded-3xl bg-card p-6 ring-1 ring-hairline ">
       <header className="mb-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground/70">
           {title}

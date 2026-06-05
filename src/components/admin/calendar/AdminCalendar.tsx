@@ -119,7 +119,7 @@ export function AdminCalendar({ initialMonth, today, bookings }: Props) {
         onFilter={setFilter}
       />
 
-      <div className="rounded-3xl bg-card p-4 ring-1 ring-white/10 ">
+      <div className="rounded-3xl bg-card p-4 ring-1 ring-hairline ">
         <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-medium uppercase tracking-wider text-foreground/45">
           {WEEKDAYS.map((d) => (
             <div key={d} className="py-1.5">
@@ -139,7 +139,7 @@ export function AdminCalendar({ initialMonth, today, bookings }: Props) {
                 className={cn(
                   "flex min-h-28 flex-col gap-1 rounded-xl border p-1.5 text-left transition-colors",
                   inMonth
-                    ? "border-white/10 bg-card"
+                    ? "border-hairline bg-card"
                     : "border-transparent bg-cream/30 text-foreground/40",
                   isToday && "ring-1 ring-brand-yellow/60",
                 )}
@@ -231,7 +231,7 @@ function Toolbar({
   onFilter: (f: Filter) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl bg-card p-3 ring-1 ring-white/10">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl bg-card p-3 ring-1 ring-hairline">
       <div className="flex items-center gap-1">
         <button
           type="button"
@@ -310,7 +310,7 @@ function BookingDetailSheet({ booking }: { booking: Booking }) {
   const addOns = summarizeAddOns(booking.addOns);
   return (
     <div className="flex h-full flex-col">
-      <SheetHeader className="border-b border-white/10 px-5 pt-5">
+      <SheetHeader className="border-b border-hairline px-5 pt-5">
         <SheetTitle className="font-display text-2xl">
           {booking.customerName}
         </SheetTitle>
@@ -336,7 +336,7 @@ function BookingDetailSheet({ booking }: { booking: Booking }) {
         {addOns && <DL label="Add-ons" value={addOns} />}
         {booking.notes && <DL label="Notes" value={booking.notes} />}
       </div>
-      <div className="border-t border-white/10 px-5 py-4">
+      <div className="border-t border-hairline px-5 py-4">
         <Link
           href={`/admin/bookings/${booking.id}`}
           className="inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-cream hover:bg-foreground/90"
@@ -360,7 +360,7 @@ function DayDetailSheet({
 }) {
   return (
     <div className="flex h-full flex-col">
-      <SheetHeader className="border-b border-white/10 px-5 pt-5">
+      <SheetHeader className="border-b border-hairline px-5 pt-5">
         <SheetTitle className="font-display text-2xl">
           {format(parseISO(date), "EEEE, d MMMM")}
         </SheetTitle>
@@ -404,7 +404,7 @@ function DayDetailSheet({
 
 function DL({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-white/10 py-1 last:border-0">
+    <div className="flex items-baseline justify-between gap-3 border-b border-hairline py-1 last:border-0">
       <dt className="text-xs uppercase tracking-wider text-foreground/45">
         {label}
       </dt>

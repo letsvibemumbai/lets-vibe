@@ -17,7 +17,7 @@ export function AdminLoadingSkeleton() {
         ))}
       </div>
 
-      <div className="rounded-3xl bg-card p-6 ring-1 ring-white/10 ">
+      <div className="rounded-3xl bg-card p-6 ring-1 ring-hairline ">
         <Skeleton className="h-5 w-40" />
         <div className="mt-4 space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -31,7 +31,7 @@ export function AdminLoadingSkeleton() {
 
 function CardSkeleton() {
   return (
-    <div className="rounded-3xl bg-card p-6 ring-1 ring-white/10 ">
+    <div className="rounded-3xl bg-card p-6 ring-1 ring-hairline ">
       <Skeleton className="h-3 w-20" />
       <Skeleton className="mt-4 h-8 w-32" />
       <Skeleton className="mt-2 h-3 w-24" />

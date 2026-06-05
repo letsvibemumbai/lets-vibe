@@ -61,7 +61,7 @@ export function MonthCalendarCard({ today, bookings }: Props) {
     .sort((a, b) => a.startTime.localeCompare(b.startTime));
 
   return (
-    <section className="rounded-3xl bg-card p-6 ring-1 ring-white/10 ">
+    <section className="rounded-3xl bg-card p-6 ring-1 ring-hairline ">
       <header className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <CalendarDays className="h-5 w-5 text-foreground/70" />
@@ -117,7 +117,7 @@ export function MonthCalendarCard({ today, bookings }: Props) {
                   ? "bg-foreground text-cream"
                   : isToday
                     ? "bg-accent/20 ring-1 ring-accent/50"
-                    : "hover:bg-white/5",
+                    : "hover:bg-foreground/5",
               )}
             >
               <span>{format(day, "d")}</span>
@@ -139,7 +139,7 @@ export function MonthCalendarCard({ today, bookings }: Props) {
         })}
       </div>
 
-      <div className="mt-5 border-t border-white/10 pt-4">
+      <div className="mt-5 border-t border-hairline pt-4">
         <div className="flex items-baseline justify-between gap-2">
           <h3 className="text-sm font-semibold text-foreground">
             {isSameDay(selectedDate, todayDate)

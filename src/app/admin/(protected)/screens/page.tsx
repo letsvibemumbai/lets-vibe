@@ -33,7 +33,7 @@ export default async function AdminScreensPage() {
               <Link
                 key={s.id}
                 href={`/admin/screens/${s.id}`}
-                className="group block overflow-hidden rounded-3xl bg-card ring-1 ring-white/10  transition-transform hover:-translate-y-0.5"
+                className="group block overflow-hidden rounded-3xl bg-card ring-1 ring-hairline  transition-transform hover:-translate-y-0.5"
               >
                 <div className="relative aspect-[4/3] w-full bg-cream">
                   {s.imageUrl ? (

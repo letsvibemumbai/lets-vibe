@@ -69,7 +69,7 @@ export function BookingsFilters(initial: Props) {
     !!initial.query;
 
   return (
-    <div className="flex flex-wrap items-end gap-3 rounded-3xl bg-card p-4 ring-1 ring-white/10 ">
+    <div className="flex flex-wrap items-end gap-3 rounded-3xl bg-card p-4 ring-1 ring-hairline ">
       <FilterField label="Search">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />

@@ -197,7 +197,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-3xl bg-card p-6 ring-1 ring-white/10 ">
+    <section className="rounded-3xl bg-card p-6 ring-1 ring-hairline ">
       <header className="mb-4 flex items-center gap-2 text-foreground/70">
         {icon}
         <h2 className="text-sm font-semibold uppercase tracking-wider">
@@ -221,7 +221,7 @@ function Row({
   className?: string;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-white/10 py-1 last:border-0">
+    <div className="flex items-baseline justify-between gap-3 border-b border-hairline py-1 last:border-0">
       <dt className="text-xs uppercase tracking-wider text-foreground/45">
         {label}
       </dt>

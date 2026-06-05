@@ -12,7 +12,7 @@ export default function AdminLoginPage() {
           <p className="mt-2 text-sm text-foreground/55">Admin sign-in</p>
         </div>
 
-        <div className="mt-10 rounded-3xl bg-card p-8 ring-1 ring-white/10 ">
+        <div className="mt-10 rounded-3xl bg-card p-8 ring-1 ring-hairline ">
           <LoginForm />
         </div>
 

@@ -4,7 +4,7 @@ import { Logo } from "@/components/Logo";
 
 export default function NotFound() {
   return (
-    <div className="dark flex min-h-screen flex-col items-center justify-center bg-cream px-4 py-20 text-center font-sans text-foreground">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-cream px-4 py-20 text-center font-sans text-foreground">
       <Logo imgClassName="h-12 w-auto" />
       <div className="mt-12 flex h-14 w-14 items-center justify-center rounded-full bg-brand-pink/60 text-foreground">
         <Compass className="h-6 w-6" />

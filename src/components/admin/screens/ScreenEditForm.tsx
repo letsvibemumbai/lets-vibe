@@ -204,7 +204,7 @@ export function ScreenEditForm({ screen }: Props) {
               />
             </div>
           ) : (
-            <div className="flex aspect-[16/9] w-full max-w-md items-center justify-center rounded-2xl border border-dashed border-white/12 bg-cream/40 text-xs text-foreground/45">
+            <div className="flex aspect-[16/9] w-full max-w-md items-center justify-center rounded-2xl border border-dashed border-hairline-strong bg-cream/40 text-xs text-foreground/45">
               No image yet
             </div>
           )}
@@ -287,7 +287,7 @@ export function ScreenEditForm({ screen }: Props) {
         </div>
 
         {blockedDates.length === 0 ? (
-          <p className="mt-4 rounded-2xl border border-dashed border-white/12 bg-cream/40 px-4 py-4 text-center text-xs text-foreground/55">
+          <p className="mt-4 rounded-2xl border border-dashed border-hairline-strong bg-cream/40 px-4 py-4 text-center text-xs text-foreground/55">
             No blocked dates.
           </p>
         ) : (
@@ -336,7 +336,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-3xl bg-card p-6 ring-1 ring-white/10 ">
+    <section className="rounded-3xl bg-card p-6 ring-1 ring-hairline ">
       <header className="mb-4 flex items-center gap-2 text-foreground/70">
         {icon}
         <h2 className="text-sm font-semibold uppercase tracking-wider">

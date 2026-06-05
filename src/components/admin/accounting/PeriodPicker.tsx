@@ -58,7 +58,7 @@ export function PeriodPicker({ from, to }: Props) {
   }
 
   return (
-    <div className="flex flex-wrap items-end gap-3 rounded-3xl bg-card p-4 ring-1 ring-white/10 ">
+    <div className="flex flex-wrap items-end gap-3 rounded-3xl bg-card p-4 ring-1 ring-hairline ">
       <Field label="From">
         <Input
           type="date"

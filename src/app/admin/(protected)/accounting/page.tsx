@@ -159,7 +159,7 @@ function SummaryCard({
   const toneColor =
     tone === "up" ? "text-emerald-700" : "text-rose-700";
   return (
-    <div className="rounded-3xl bg-card p-6 ring-1 ring-white/10 ">
+    <div className="rounded-3xl bg-card p-6 ring-1 ring-hairline ">
       <div className={cn("flex items-center gap-2", toneColor)}>
         {icon}
         <span className="text-xs font-semibold uppercase tracking-wider">
@@ -188,7 +188,7 @@ function PieCard({
   total: number;
 }) {
   return (
-    <section className="rounded-3xl bg-card p-6 ring-1 ring-white/10 ">
+    <section className="rounded-3xl bg-card p-6 ring-1 ring-hairline ">
       <header className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-foreground/70">
           {icon}

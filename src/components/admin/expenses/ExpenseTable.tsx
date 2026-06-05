@@ -107,15 +107,15 @@ export function ExpenseTable({ rows, filters }: Props) {
         </div>
       </div>
 
-      <div className="rounded-3xl bg-card p-2 ring-1 ring-white/10 ">
+      <div className="rounded-3xl bg-card p-2 ring-1 ring-hairline ">
         {rows.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-white/12 bg-cream/40 px-6 py-12 text-center text-sm text-foreground/55">
+          <p className="rounded-2xl border border-dashed border-hairline-strong bg-cream/40 px-6 py-12 text-center text-sm text-foreground/55">
             No expenses match these filters.
           </p>
         ) : (
           <Table>
             <TableHeader>
-              <TableRow className="border-white/10 [&_th]:text-[11px] [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-foreground/45">
+              <TableRow className="border-hairline [&_th]:text-[11px] [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-foreground/45">
                 <TableHead>Date</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Description</TableHead>
@@ -127,7 +127,7 @@ export function ExpenseTable({ rows, filters }: Props) {
             </TableHeader>
             <TableBody>
               {rows.map((e) => (
-                <TableRow key={e.id} className="border-white/10">
+                <TableRow key={e.id} className="border-hairline">
                   <TableCell className="font-medium text-foreground">
                     {e.date}
                   </TableCell>

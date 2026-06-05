@@ -86,7 +86,7 @@ export function ReportToolbar({ year, month, start, end }: Props) {
   }
 
   return (
-    <div className="flex flex-wrap items-end justify-between gap-3 rounded-3xl bg-card p-4 ring-1 ring-white/10  print:hidden">
+    <div className="flex flex-wrap items-end justify-between gap-3 rounded-3xl bg-card p-4 ring-1 ring-hairline  print:hidden">
       <div className="flex flex-wrap items-end gap-3">
         <Field label="Month">
           <Select value={String(month)} onValueChange={(v) => setMonth(Number(v))}>

@@ -63,10 +63,10 @@ export function AvailabilitySearch() {
   }
 
   const field =
-    "h-10 rounded-xl bg-background px-3 text-sm text-foreground ring-1 ring-white/12 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60";
+    "h-10 rounded-xl bg-background px-3 text-sm text-foreground ring-1 ring-hairline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60";
 
   return (
-    <section className="rounded-3xl bg-card p-4 ring-1 ring-white/10 sm:p-5">
+    <section className="rounded-3xl bg-card p-4 ring-1 ring-hairline sm:p-5">
       <header className="mb-4 flex items-center gap-2 text-foreground/70">
         <CalendarSearch className="h-4 w-4" />
         <h2 className="text-sm font-semibold uppercase tracking-wider">
@@ -115,7 +115,7 @@ export function AvailabilitySearch() {
               aria-label="Fewer hours"
               disabled={duration <= MIN_DURATION}
               onClick={() => setDuration((d) => clampDuration(d - 1))}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-foreground ring-1 ring-white/15 transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-30"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-foreground ring-1 ring-hairline-strong transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-30"
             >
               <Minus className="h-3.5 w-3.5" />
             </button>
@@ -127,7 +127,7 @@ export function AvailabilitySearch() {
               aria-label="More hours"
               disabled={duration >= MAX_DURATION}
               onClick={() => setDuration((d) => clampDuration(d + 1))}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-foreground ring-1 ring-white/15 transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-30"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-foreground ring-1 ring-hairline-strong transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-30"
             >
               <Plus className="h-3.5 w-3.5" />
             </button>
@@ -164,7 +164,7 @@ export function AvailabilitySearch() {
                   "flex items-center justify-between gap-3 rounded-2xl border px-4 py-3",
                   r.available
                     ? "border-emerald-500/30 bg-emerald-500/[0.08]"
-                    : "border-white/10 bg-white/[0.03]",
+                    : "border-hairline bg-foreground/[0.03]",
                 )}
               >
                 <div className="min-w-0">
@@ -181,7 +181,7 @@ export function AvailabilitySearch() {
                     Free · book
                   </Link>
                 ) : (
-                  <span className="shrink-0 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-foreground/55">
+                  <span className="shrink-0 rounded-full bg-foreground/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-foreground/55">
                     Unavailable
                   </span>
                 )}

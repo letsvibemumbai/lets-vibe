@@ -87,7 +87,7 @@ export default async function AdminAddonsPage() {
             href="/admin/addons/items/new"
           />
         ) : (
-          <ul className="divide-y divide-white/10 overflow-hidden rounded-3xl bg-card ring-1 ring-white/10">
+          <ul className="divide-y divide-hairline overflow-hidden rounded-3xl bg-card ring-1 ring-hairline">
             {items.map((item) => (
               <ItemRow key={item.id} item={item} />
             ))}
@@ -155,7 +155,7 @@ function PackageRow({
     <li>
       <Link
         href={`/admin/addons/packages/${pkg.id}`}
-        className="block rounded-3xl bg-card p-5 ring-1 ring-white/10 transition-colors hover:bg-cream/40"
+        className="block rounded-3xl bg-card p-5 ring-1 ring-hairline transition-colors hover:bg-cream/40"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -207,7 +207,7 @@ function EmptyCard({
   href: string;
 }) {
   return (
-    <div className="rounded-3xl border border-dashed border-white/12 bg-cream/40 px-6 py-10 text-center">
+    <div className="rounded-3xl border border-dashed border-hairline-strong bg-cream/40 px-6 py-10 text-center">
       <p className="text-sm text-foreground/65">{message}</p>
       <Link
         href={href}

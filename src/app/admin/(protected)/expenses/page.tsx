@@ -119,7 +119,7 @@ function TotalCard({
   count: number;
 }) {
   return (
-    <div className="rounded-3xl bg-card p-6 ring-1 ring-white/10 ">
+    <div className="rounded-3xl bg-card p-6 ring-1 ring-hairline ">
       <div className="flex items-center gap-2 text-foreground/60">
         {icon}
         <span className="text-xs font-semibold uppercase tracking-wider">

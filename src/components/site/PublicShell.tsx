@@ -13,7 +13,7 @@ import {
  */
 export function PublicShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="dark">
+    <div>
       <ContinuousBackground />
       <NoiseTexture opacity={0.02} />
       <CustomCursor />
