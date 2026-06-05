@@ -9,6 +9,7 @@ import {
 import { Toaster } from "@/components/ui/sonner";
 import { FirebaseAnalytics } from "@/components/FirebaseAnalytics";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { SmoothScroll } from "@/components/ui-vibe/SmoothScroll";
 import "./globals.css";
 
 /**
@@ -122,6 +123,7 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
+          <SmoothScroll />
           {children}
           <Toaster position="top-center" richColors />
           <FirebaseAnalytics />
