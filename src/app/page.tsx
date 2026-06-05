@@ -6,6 +6,7 @@ import { ScreenStory } from "@/components/site/ScreenStory";
 import { EditorialGallery } from "@/components/site/EditorialGallery";
 import { FaqAccordion } from "@/components/site/FaqAccordion";
 import { HouseRules } from "@/components/site/HouseRules";
+import { GsapManifesto } from "@/components/site/GsapManifesto";
 import { AvailabilityChecker } from "@/components/booking/AvailabilityChecker";
 import { PublicShell } from "@/components/site/PublicShell";
 import {
@@ -192,6 +193,9 @@ export default function Home() {
 
           {/* ROMANTIC FULL-BLEED */}
           <RomanticSection />
+
+          {/* GSAP pinned "sticky scroll" manifesto */}
+          <GsapManifesto />
 
           {/* HOW IT WORKS */}
           <section id="booking" className="relative py-28 sm:py-36">
