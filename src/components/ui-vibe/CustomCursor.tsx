@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { motion, useMotionValue, useSpring } from "motion/react";
+import { useTheme } from "next-themes";
 
 /**
  * Quiet editorial cursor.
@@ -14,6 +15,10 @@ import { motion, useMotionValue, useSpring } from "motion/react";
  * - Hidden on touch devices and when the user has `prefers-reduced-motion`.
  */
 export function CustomCursor() {
+  const { resolvedTheme } = useTheme();
+  // Light cursor on the dark theme, dark cursor on the light theme.
+  const dotColor = resolvedTheme === "light" ? "#1A1612" : "#F4F1EA";
+
   const x = useMotionValue(-40);
   const y = useMotionValue(-40);
   const sx = useSpring(x, { stiffness: 600, damping: 40, mass: 0.4 });
@@ -90,7 +95,7 @@ export function CustomCursor() {
             width: interactive ? 32 : 6,
             height: interactive ? 32 : 6,
             borderWidth: interactive ? 1.5 : 0,
-            backgroundColor: interactive ? "rgba(0,0,0,0)" : "#1A1612",
+            backgroundColor: interactive ? "rgba(0,0,0,0)" : dotColor,
           }}
           transition={{ type: "spring", stiffness: 360, damping: 28, mass: 0.4 }}
           className="rounded-full border-ink"
