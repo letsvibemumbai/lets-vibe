@@ -9,7 +9,7 @@ import {
   useReducedMotion,
 } from "motion/react";
 import { QuietButton } from "@/components/editorial";
-import { Magnetic } from "@/components/ui-vibe/Magnetic";
+import { TicketButton } from "@/components/ui-vibe/TicketButton";
 import { photoUrl } from "@/lib/photos";
 
 /**
@@ -114,11 +114,9 @@ export function Hero() {
               </p>
 
               <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-                <Magnetic strength={0.4}>
-                  <QuietButton href="/book" variant="primary" size="lg">
-                    Reserve a screen
-                  </QuietButton>
-                </Magnetic>
+                <TicketButton href="/book" size="lg">
+                  Reserve a screen
+                </TicketButton>
                 <QuietButton href="/#booking" variant="link" size="md">
                   How it works
                 </QuietButton>

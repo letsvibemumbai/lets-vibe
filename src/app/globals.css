@@ -359,6 +359,19 @@
     animation: ken-burns 18s ease-in-out infinite;
   }
 
+  /* Marquee bulb — soft twinkling gold glow for the "Now Showing" band.
+     Staggered per-bulb via inline animation-delay. */
+  @keyframes lv-bulb-glow {
+    0%, 100% { opacity: 0.32; box-shadow: 0 0 4px 0 rgba(217, 169, 76, 0.4); }
+    50%      { opacity: 1;    box-shadow: 0 0 10px 1px rgba(217, 169, 76, 0.85); }
+  }
+  .lv-bulb {
+    animation: lv-bulb-glow 2.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lv-bulb { animation: none; opacity: 0.7; }
+  }
+
   /* Native cursor hide — applied to <html> when our quiet cursor mounts. */
   .hide-native-cursor,
   .hide-native-cursor * {

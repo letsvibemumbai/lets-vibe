@@ -7,7 +7,8 @@ import { EditorialGallery } from "@/components/site/EditorialGallery";
 import { FaqAccordion } from "@/components/site/FaqAccordion";
 import { HouseRules } from "@/components/site/HouseRules";
 import { GsapManifesto } from "@/components/site/GsapManifesto";
-import { Magnetic } from "@/components/ui-vibe/Magnetic";
+import { TicketButton } from "@/components/ui-vibe/TicketButton";
+import { MarqueeLights } from "@/components/ui-vibe/MarqueeLights";
 import { WaterfallText } from "@/components/ui-vibe/WaterfallText";
 import { AvailabilityChecker } from "@/components/booking/AvailabilityChecker";
 import { PublicShell } from "@/components/site/PublicShell";
@@ -15,7 +16,6 @@ import {
   DisplayHeading,
   NumberedList,
   PullQuote,
-  QuietButton,
   SectionLabel,
 } from "@/components/editorial";
 import { photoUrl } from "@/lib/photos";
@@ -193,6 +193,9 @@ export default function Home() {
             </div>
           </section>
 
+          {/* NOW SHOWING — cinema marquee band */}
+          <MarqueeLights />
+
           {/* ROMANTIC FULL-BLEED */}
           <RomanticSection />
 
@@ -295,11 +298,9 @@ export default function Home() {
                 <p className="text-[13px] text-muted">
                   Pricing varies by room. Add-ons available.
                 </p>
-                <Magnetic strength={0.4}>
-                  <QuietButton href="/book" variant="primary" size="md">
-                    Reserve
-                  </QuietButton>
-                </Magnetic>
+                <TicketButton href="/book" size="md">
+                  Reserve
+                </TicketButton>
               </div>
             </div>
           </section>
@@ -379,11 +380,9 @@ export default function Home() {
                 </span>
               </DisplayHeading>
               <div className="pt-2">
-                <Magnetic strength={0.4}>
-                  <QuietButton href="/book" variant="primary" size="lg">
-                    Book a screen
-                  </QuietButton>
-                </Magnetic>
+                <TicketButton href="/book" size="lg">
+                  Book a screen
+                </TicketButton>
               </div>
             </div>
           </section>
