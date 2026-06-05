@@ -58,9 +58,16 @@ export async function getExpensesForMonth(year: number, month: number): Promise<
   return getExpensesInRange(start, end);
 }
 
+/** Drop undefined fields so Firestore never sees an `undefined` value. */
+function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) if (v !== undefined) out[k] = v;
+  return out as Partial<T>;
+}
+
 export async function createExpense(data: NewExpense): Promise<string> {
   const ref = await adminDb.collection(COLLECTION).add({
-    ...data,
+    ...stripUndefined(data as Record<string, unknown>),
     createdAt: FieldValue.serverTimestamp(),
   });
   return ref.id;
@@ -70,7 +77,10 @@ export async function updateExpense(
   id: string,
   data: Partial<Omit<Expense, "id" | "createdAt">>,
 ): Promise<void> {
-  await adminDb.collection(COLLECTION).doc(id).set(data, { merge: true });
+  await adminDb
+    .collection(COLLECTION)
+    .doc(id)
+    .set(stripUndefined(data as Record<string, unknown>), { merge: true });
 }
 
 export async function deleteExpense(id: string): Promise<void> {

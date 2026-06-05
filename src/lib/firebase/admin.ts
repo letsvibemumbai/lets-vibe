@@ -47,7 +47,22 @@ function realAuth(): Auth {
   return (_auth ??= getAuth(ensureApp()));
 }
 function realDb(): Firestore {
-  return (_db ??= getFirestore(ensureApp()));
+  if (!_db) {
+    _db = getFirestore(ensureApp());
+    // Ignore undefined field values instead of throwing. Without this, writing
+    // an object with any `undefined` field (e.g. an expense with no receiptUrl)
+    // fails with "Cannot use 'undefined' as a Firestore value". settings() can
+    // only run once per Firestore instance; the firebase-admin singleton
+    // persists across dev HMR (where this module's memo resets), so a repeat
+    // call throws "already initialized" — harmless, since the first call's
+    // setting persists. Guard it.
+    try {
+      _db.settings({ ignoreUndefinedProperties: true });
+    } catch {
+      // Already configured on a previous (pre-HMR) initialization.
+    }
+  }
+  return _db;
 }
 function realBucket(): Bucket {
   return (_bucket ??= (getStorage(ensureApp()) as Storage).bucket());
