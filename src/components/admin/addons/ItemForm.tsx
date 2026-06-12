@@ -13,7 +13,9 @@ import {
   deleteAddonItemAction,
   updateAddonItemAction,
 } from "@/app/actions/addons";
-import type { AddonItem } from "@/types";
+import { SCREEN_IDS } from "@/lib/booking/constants";
+import { SCREEN_LABEL } from "@/components/admin/dashboard/utils";
+import type { AddonItem, ScreenId } from "@/types";
 
 type Props = {
   /** When undefined, the form creates a new item. */
@@ -34,9 +36,24 @@ export function ItemForm({ item }: Props) {
   const [maxQuantity, setMaxQuantity] = useState(item?.maxQuantity ?? 1);
   const [active, setActive] = useState(item?.active ?? true);
   const [sortOrder, setSortOrder] = useState(item?.sortOrder ?? 100);
+  const [screenIds, setScreenIds] = useState<ScreenId[]>(
+    item?.screenIds?.length ? item.screenIds : [...SCREEN_IDS],
+  );
+
+  function toggleScreen(id: ScreenId, checked: boolean) {
+    setScreenIds((prev) =>
+      checked
+        ? SCREEN_IDS.filter((s) => s === id || prev.includes(s))
+        : prev.filter((s) => s !== id),
+    );
+  }
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
+    if (screenIds.length === 0) {
+      toast.error("Pick at least one room this item is available on");
+      return;
+    }
     const payload = {
       name: name.trim(),
       description: description.trim() || undefined,
@@ -46,6 +63,8 @@ export function ItemForm({ item }: Props) {
       maxQuantity: Math.max(1, Math.min(99, Math.round(maxQuantity))),
       active,
       sortOrder: Math.max(0, Math.min(9999, Math.round(sortOrder))),
+      // All rooms checked ⇒ store [] (= available everywhere).
+      screenIds: screenIds.length === SCREEN_IDS.length ? [] : screenIds,
     };
     startTransition(async () => {
       try {
@@ -156,6 +175,33 @@ export function ItemForm({ item }: Props) {
         </div>
       </Section>
 
+      <Section title="Available on">
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          {SCREEN_IDS.map((id) => (
+            <label key={id} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={screenIds.includes(id)}
+                onChange={(e) => toggleScreen(id, e.target.checked)}
+                className="h-4 w-4"
+              />
+              <span className="text-sm font-medium text-foreground">
+                {SCREEN_LABEL[id]}
+              </span>
+            </label>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-foreground/55">
+          Untick rooms where this item isn&apos;t offered — e.g. Rose petals →
+          Forest only. All rooms = available everywhere.
+        </p>
+        {screenIds.length === 0 && (
+          <p className="mt-1 text-xs text-red-600">
+            Pick at least one room to save this item.
+          </p>
+        )}
+      </Section>
+
       <Section title="Image (optional)">
         <Field id="imageUrl" label="Image URL">
           <Input
@@ -205,7 +251,7 @@ export function ItemForm({ item }: Props) {
         ) : (
           <span />
         )}
-        <Button type="submit" disabled={pending || deleting}>
+        <Button type="submit" disabled={pending || deleting || screenIds.length === 0}>
           {pending ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (

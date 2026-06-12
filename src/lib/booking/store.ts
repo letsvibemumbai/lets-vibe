@@ -2,7 +2,12 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { BookingAddonSelection, Duration, ScreenId } from "@/types";
+import type {
+  BookingAddonSelection,
+  Duration,
+  PaymentPlan,
+  ScreenId,
+} from "@/types";
 
 export type CustomerDetails = {
   name: string;
@@ -29,6 +34,8 @@ type BookingDraft = {
   customer?: CustomerDetails;
   addOns: AddOns;
   amount?: number;
+  /** Pay-in-full vs 50% deposit. Defaults to full until the customer chooses. */
+  paymentPlan: PaymentPlan;
 };
 
 type BookingActions = {
@@ -37,6 +44,7 @@ type BookingActions = {
   setCustomer: (customer: CustomerDetails) => void;
   setAddOns: (addOns: AddOns) => void;
   setAmount: (amount: number) => void;
+  setPaymentPlan: (plan: PaymentPlan) => void;
   reset: () => void;
 };
 
@@ -49,6 +57,7 @@ const initial: BookingDraft = {
   customer: undefined,
   addOns: {},
   amount: undefined,
+  paymentPlan: "full",
 };
 
 export const useBookingStore = create<BookingDraft & BookingActions>()(
@@ -69,6 +78,7 @@ export const useBookingStore = create<BookingDraft & BookingActions>()(
       setCustomer: (customer) => set({ customer }),
       setAddOns: (addOns) => set({ addOns }),
       setAmount: (amount) => set({ amount }),
+      setPaymentPlan: (paymentPlan) => set({ paymentPlan }),
       reset: () => set(initial),
     }),
     {

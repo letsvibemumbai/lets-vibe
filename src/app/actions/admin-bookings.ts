@@ -1,5 +1,6 @@
 "use server";
 
+import crypto from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { FieldValue } from "firebase-admin/firestore";
@@ -28,9 +29,16 @@ import {
   getAddonPackage,
 } from "@/lib/db/addons.server";
 import { customerDocRef, writeCustomerUpsert } from "@/lib/db/customers.server";
+import { maybeSendBookingConfirmation } from "@/lib/email/sendBookingConfirmation";
+import {
+  experienceName,
+  resolveSelectionsAgainstCatalog,
+} from "@/lib/booking/addons";
+import { collectedByMethod, balanceDue } from "@/lib/booking/payments";
 import type {
   Booking,
   BookingAddonSelection,
+  BookingPayment,
   BookingPaymentMethod,
   BookingSource,
   BookingStatus,
@@ -93,37 +101,26 @@ const SelectionRequestSchema = z.object({
   quantity: z.number().int().min(1).max(99),
 });
 
+/**
+ * Shared resolver, admin-tuned: inactive items/packages are accepted (admins
+ * correct existing bookings), and screen availability is enforced only where
+ * the caller opts in — on for offline-create, off for edits of legacy
+ * bookings that may hold items no longer offered on their screen.
+ */
 async function resolveAdminSelections(
   requests: z.infer<typeof SelectionRequestSchema>[],
+  screenId: ScreenId,
+  opts?: { enforceScreenAvailability?: boolean },
 ): Promise<BookingAddonSelection[]> {
-  if (requests.length === 0) return [];
-  const resolved: BookingAddonSelection[] = [];
-  for (const req of requests) {
-    if (req.kind === "item") {
-      const item = await getAddonItem(req.id);
-      if (!item) throw new Error(`ADDON_ITEM_NOT_FOUND:${req.id}`);
-      // Admins can pick inactive items (they're correcting existing bookings).
-      const qty = Math.min(req.quantity, Math.max(1, item.maxQuantity));
-      resolved.push({
-        kind: "item",
-        id: item.id,
-        name: item.name,
-        unitPrice: item.price,
-        quantity: qty,
-      });
-    } else {
-      const pkg = await getAddonPackage(req.id);
-      if (!pkg) throw new Error(`ADDON_PACKAGE_NOT_FOUND:${req.id}`);
-      resolved.push({
-        kind: "package",
-        id: pkg.id,
-        name: pkg.name,
-        unitPrice: pkg.price,
-        quantity: 1,
-      });
-    }
-  }
-  return resolved;
+  return resolveSelectionsAgainstCatalog(
+    requests,
+    screenId,
+    { getItem: getAddonItem, getPackage: getAddonPackage },
+    {
+      allowInactive: true,
+      enforceScreenAvailability: opts?.enforceScreenAvailability ?? false,
+    },
+  );
 }
 
 const UpdateDetailsSchema = z.object({
@@ -172,7 +169,11 @@ export async function updateBookingDetailsAction(
     throw new Error("Completed bookings cannot change status");
   }
 
-  const selections = await resolveAdminSelections(payload.addOns.selections ?? []);
+  const selections = await resolveAdminSelections(
+    payload.addOns.selections ?? [],
+    booking.screenId,
+    { enforceScreenAvailability: false },
+  );
   await updateBooking(id, {
     customerName: payload.customerName,
     customerPhone: payload.customerPhone,
@@ -185,6 +186,14 @@ export async function updateBookingDetailsAction(
       selections,
     },
   });
+
+  // If the admin just confirmed a previously-unconfirmed booking, send the
+  // confirmation email. Idempotent: editing an already-confirmed booking won't
+  // resend (confirmationEmailSentAt guards it).
+  if (payload.status === "confirmed") {
+    await maybeSendBookingConfirmation(id);
+  }
+
   revalidate();
   revalidatePath(`/admin/bookings/${id}`);
 }
@@ -270,6 +279,8 @@ export async function createOfflineBookingAction(
 
   const resolvedSelections = await resolveAdminSelections(
     payload.addOns.selections ?? [],
+    payload.screenId,
+    { enforceScreenAvailability: true },
   );
   const originalAmount = calculateBookingPrice(screen, payload.duration, {
     decorations: payload.addOns.decorations,
@@ -317,6 +328,22 @@ export async function createOfflineBookingAction(
       source: "offline",
     });
 
+    // Record the collected amount as a ledger entry so it flows into the
+    // UPI/cash balances. A ₹0 (free) booking gets no entry.
+    const offlinePayments: BookingPayment[] =
+      finalAmount > 0
+        ? [
+            {
+              id: crypto.randomUUID(),
+              amount: finalAmount,
+              method: payload.paymentMethod,
+              channel: "venue",
+              kind: "full",
+              at: Date.now(),
+            },
+          ]
+        : [];
+
     const ref = adminDb.collection(COLLECTION).doc();
     tx.set(ref, {
       screenId: payload.screenId,
@@ -335,6 +362,8 @@ export async function createOfflineBookingAction(
       },
       amount: finalAmount,
       amountPaid: finalAmount,
+      payments: offlinePayments,
+      paymentPlan: "full",
       originalAmount,
       discount,
       status: "confirmed" satisfies BookingStatus,
@@ -346,6 +375,9 @@ export async function createOfflineBookingAction(
     });
     return ref.id;
   });
+
+  // Confirmation email — offline bookings are created already confirmed.
+  await maybeSendBookingConfirmation(bookingId);
 
   revalidate();
   redirect(`/admin/bookings/${bookingId}`);
@@ -432,7 +464,13 @@ export async function exportBookingsCsvAction(
     "guestCount",
     "amount",
     "amountPaid",
+    "balanceDue",
     "discount",
+    "paymentPlan",
+    "experience",
+    "upiCollected",
+    "cashCollected",
+    "onlineCollected",
     "status",
     "source",
     "paymentMethod",
@@ -446,6 +484,7 @@ export async function exportBookingsCsvAction(
   ];
   const lines = [headers.join(",")];
   for (const b of rows) {
+    const byMethod = collectedByMethod(b);
     lines.push(
       [
         csvEscape(b.id),
@@ -460,7 +499,13 @@ export async function exportBookingsCsvAction(
         csvEscape(b.guestCount),
         csvEscape(b.amount),
         csvEscape(b.amountPaid),
+        csvEscape(balanceDue(b)),
         csvEscape(b.discount ?? 0),
+        csvEscape(b.paymentPlan ?? ""),
+        csvEscape(experienceName(b.addOns)),
+        csvEscape(byMethod.upi),
+        csvEscape(byMethod.cash),
+        csvEscape(byMethod.razorpay),
         csvEscape(b.status),
         csvEscape(b.source),
         csvEscape(b.paymentMethod),

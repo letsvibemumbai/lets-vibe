@@ -83,10 +83,13 @@ export function DetailsForm({ screen, items, packages }: Props) {
 
   useEffect(() => {
     if (!hydrated) return;
-    if (!draft.date || !draft.duration || !draft.startTime) {
+    // Read the live store, not the render snapshot — see PaymentClient note:
+    // the first post-rehydration render can still hold the empty SSR snapshot.
+    const d = useBookingStore.getState();
+    if (!d.date || !d.duration || !d.startTime) {
       router.replace(`/book/${screen.id}`);
     }
-  }, [hydrated, draft.date, draft.duration, draft.startTime, screen.id, router]);
+  }, [hydrated, screen.id, router]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -245,10 +248,13 @@ export function DetailsForm({ screen, items, packages }: Props) {
           {/* Add-ons */}
           {(packages.length > 0 || items.length > 0) && (
             <section className="border-t border-hairline pt-10">
-              <SectionLabel className="mb-8 block">Add-ons</SectionLabel>
+              <SectionLabel className="mb-8 block">
+                Your experience &amp; add-ons
+              </SectionLabel>
               <AddOnsPicker
                 items={items}
                 packages={packages}
+                screenId={screen.id}
                 value={selections}
                 onChange={setSelections}
               />

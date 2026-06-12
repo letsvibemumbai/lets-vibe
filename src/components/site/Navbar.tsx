@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
   { href: "/#screens", label: "Screens" },
-  { href: "/#experience", label: "Experience" },
+  { href: "/#experiences", label: "Experiences" },
   { href: "/#booking", label: "Booking" },
   { href: "/faq", label: "Journal" },
 ] as const;

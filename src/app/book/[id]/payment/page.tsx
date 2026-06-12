@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
 import { Stepper } from "@/components/booking/Stepper";
 import { PaymentClient } from "@/components/booking/PaymentClient";
-import { SCREEN_PRESETS, isScreenId } from "@/lib/booking/constants";
+import { isScreenId } from "@/lib/booking/constants";
+import { getScreenResolved } from "@/lib/db/screens.server";
 import { DisplayHeading, SectionLabel } from "@/components/editorial";
 
 export const metadata = { title: "Review & pay · Let's Vibe" };
+export const dynamic = "force-dynamic";
 
 export default async function PaymentPage({
   params,
@@ -13,7 +15,7 @@ export default async function PaymentPage({
 }) {
   const { id } = await params;
   if (!isScreenId(id)) redirect("/book");
-  const screen = SCREEN_PRESETS[id];
+  const screen = await getScreenResolved(id);
 
   return (
     <>

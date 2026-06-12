@@ -1,6 +1,8 @@
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import { Hero } from "@/components/site/Hero";
+import { ExperiencesSection } from "@/components/site/ExperiencesSection";
+import { ReviewsMarquee } from "@/components/site/ReviewsMarquee";
 import { RomanticSection } from "@/components/site/RomanticSection";
 import { ScreenStory } from "@/components/site/ScreenStory";
 import { EditorialGallery } from "@/components/site/EditorialGallery";
@@ -16,13 +18,41 @@ import {
   DisplayHeading,
   NumberedList,
   PullQuote,
+  QuietButton,
   SectionLabel,
 } from "@/components/editorial";
-import { photoUrl } from "@/lib/photos";
+import { getScreensResolved } from "@/lib/db/screens.server";
+import { listAddonItems, listAddonPackages } from "@/lib/db/addons.server";
+import { screenImageUrl } from "@/lib/booking/constants";
+import {
+  celebrationFromPrice,
+  movieFromPrice,
+  selectCelebrationPackage,
+} from "@/lib/experiences";
+import type { Screen } from "@/types";
+
+export const dynamic = "force-dynamic";
+
+/** Override the editorial "From ₹…/hour" line with the live admin price. */
+function withLivePrice(
+  details: { label: string; value: string }[],
+  live?: Screen,
+): { label: string; value: string }[] {
+  if (!live) return details;
+  return details.map((d) =>
+    d.label === "From"
+      ? {
+          ...d,
+          value: `₹${live.basePrices["1h"].toLocaleString("en-IN")} / hour`,
+        }
+      : d,
+  );
+}
 
 const SCREENS = [
   {
     index: "01",
+    id: "beach" as const,
     name: "Beach Vibes",
     poeticName: "Warm sand, sundown.",
     description:
@@ -38,14 +68,15 @@ const SCREENS = [
   },
   {
     index: "02",
+    id: "grass" as const,
     name: "Grass Garden",
     poeticName: "A room, designed for two.",
     description:
-      "Soft, low, intentional. A bench seat for two, fairy lights overhead, the kind of quiet most date nights don't manage. Add the romantic setup if the night calls for it.",
+      "Soft, low, intentional. A bench seat for two, fairy lights overhead, the kind of quiet most date nights don't manage. Add the Celebration and walk into a room already glowing.",
     details: [
       { label: "Capacity", value: "2 – 4 guests" },
       { label: "From", value: "₹1,800 / hour" },
-      { label: "Add-on", value: "Romantic setup, ₹800" },
+      { label: "Best for", value: "Date nights, anniversaries" },
     ],
     photoKey: "screen-grass" as const,
     photoCaption: "Grass Garden — anniversary setup",
@@ -53,6 +84,7 @@ const SCREENS = [
   },
   {
     index: "03",
+    id: "forest" as const,
     name: "Forest Retreat",
     poeticName: "Tall ceilings, a bathtub, a swing.",
     description:
@@ -78,32 +110,34 @@ const STEPS = [
     body: "Hour-by-hour from morning through late evening, every day.",
   },
   {
-    title: "Bring your film.",
-    body: "Queue up your pick. The room is yours alone the whole time — just the two of you.",
+    title: "Dress the night.",
+    body: "Keep it just the film, or go full Celebration — cake, balloons, lights, fog, petals. Or pick add-ons one by one.",
   },
   {
     title: "We'll handle the rest.",
-    body: "Projection, sound, ambient lighting, and a quiet, considered handover. You press play.",
+    body: "Projection, sound, ambience, a quiet handover. Queue your film and press play.",
   },
 ];
 
-const PRICES = [
+/** Pricing rows are derived live from the admin screens — only the editorial
+ * framing is fixed here. */
+const PRICE_ROWS = [
   {
+    key: "1h",
     duration: "01 hour",
-    from: "₹1,500",
     note: "Quick, intimate. The film, then home.",
   },
   {
+    key: "2h",
     duration: "02 hours",
-    from: "₹2,500",
     note: "A full feature, end to end. Most evenings end here.",
   },
   {
+    key: "3h",
     duration: "03 hours",
-    from: "₹3,500",
     note: "Double feature, or one long story. Best for groups.",
   },
-];
+] as const;
 
 const VOICES = [
   {
@@ -118,12 +152,26 @@ const VOICES = [
   },
   {
     text:
-      "We booked the Grass room for an anniversary. The romantic setup was understated in the right way. Lit candles, not a balloon arch.",
+      "Booked the Celebration for her thirtieth — fog, petals, fairy lights, cake waiting. She still thinks I set it up myself.",
     attribution: "Kabir D., November 2024",
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  // .catch(() => []) so a Firestore hiccup on the add-on catalogue can never
+  // 500 the homepage — the Experiences section degrades to static copy.
+  const [liveScreens, addonItems, addonPackages] = await Promise.all([
+    getScreensResolved(),
+    listAddonItems({ activeOnly: true }).catch(() => []),
+    listAddonPackages({ activeOnly: true }).catch(() => []),
+  ]);
+  const byId = new Map(liveScreens.map((s) => [s.id, s] as const));
+  const celebration = selectCelebrationPackage(addonPackages);
+  const screenNames = liveScreens.map((s) => ({ id: s.id, name: s.name }));
+  const prices = PRICE_ROWS.map((row) => ({
+    ...row,
+    from: Math.min(...liveScreens.map((s) => s.basePrices[row.key])),
+  }));
   return (
     <PublicShell>
       <div className="relative min-h-screen font-body text-ink">
@@ -146,6 +194,11 @@ export default function Home() {
                   <p className="mt-2 text-[13px] leading-[1.6] text-muted">
                     Pick a date and time to see which screens are open.
                   </p>
+                  <div className="mt-4">
+                    <QuietButton href="/book" variant="secondary" size="sm">
+                      Browse the rooms
+                    </QuietButton>
+                  </div>
                 </div>
                 <div className="lg:col-span-9">
                   <AvailabilityChecker variant="bare" />
@@ -175,28 +228,66 @@ export default function Home() {
               </header>
 
               <div className="mt-12 divide-y divide-hairline sm:mt-16">
-                {SCREENS.map((s, i) => (
-                  <ScreenStory
-                    key={s.name}
-                    index={s.index}
-                    name={s.name}
-                    poeticName={s.poeticName}
-                    description={s.description}
-                    details={s.details}
-                    photoSrc={photoUrl(s.photoKey, 1200)}
-                    photoCaption={s.photoCaption}
-                    href={s.href}
-                    flip={i % 2 === 1}
-                  />
-                ))}
+                {SCREENS.map((s, i) => {
+                  const live = byId.get(s.id);
+                  return (
+                    <ScreenStory
+                      key={s.id}
+                      index={s.index}
+                      name={live?.name ?? s.name}
+                      poeticName={s.poeticName}
+                      description={live?.description ?? s.description}
+                      details={withLivePrice(s.details, live)}
+                      photoSrc={screenImageUrl(live ?? { id: s.id }, 1200)}
+                      photoCaption={s.photoCaption}
+                      href={s.href}
+                      flip={i % 2 === 1}
+                    />
+                  );
+                })}
               </div>
             </div>
           </section>
 
+          {/* EXPERIENCES — Movie vs Celebration, plus the à la carte rail */}
+          <ExperiencesSection
+            movieFrom={movieFromPrice(liveScreens)}
+            celebration={celebration}
+            celebrationFrom={celebration ? celebrationFromPrice(celebration) : null}
+            items={addonItems}
+            screens={screenNames}
+          />
+
           {/* NOW SHOWING — cinema marquee band */}
           <MarqueeLights />
 
-          {/* ROMANTIC FULL-BLEED */}
+          {/* REVIEWS — dark band, two opposite-scroll rows */}
+          <section className="dark relative isolate overflow-hidden bg-[#0c0b10] py-20 text-ink sm:py-24">
+            <div className="mx-auto max-w-[1280px] px-5 sm:px-8 lg:px-12">
+              <header>
+                <SectionLabel tone="accent" className="mb-6">
+                  From the group chat
+                </SectionLabel>
+                <DisplayHeading as="h2" size="sm">
+                  The reviews write themselves.
+                </DisplayHeading>
+              </header>
+            </div>
+            <div className="relative mt-12 sm:mt-14">
+              {/* edge fades so the tiles dissolve into the band */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-[#0c0b10] to-transparent sm:w-28"
+              />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-[#0c0b10] to-transparent sm:w-28"
+              />
+              <ReviewsMarquee />
+            </div>
+          </section>
+
+          {/* CELEBRATION FULL-BLEED */}
           <RomanticSection />
 
           {/* GSAP pinned "sticky scroll" manifesto */}
@@ -207,7 +298,7 @@ export default function Home() {
             <div className="mx-auto max-w-[1280px] px-5 sm:px-8 lg:px-12">
               <header className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end lg:gap-16">
                 <div className="lg:col-span-7">
-                  <SectionLabel className="mb-6">02 / Booking</SectionLabel>
+                  <SectionLabel className="mb-6">03 / Booking</SectionLabel>
                   <DisplayHeading as="h2" size="lg">
                     How an evening unfolds.
                   </DisplayHeading>
@@ -255,7 +346,7 @@ export default function Home() {
             <div className="mx-auto max-w-[1280px] px-5 sm:px-8 lg:px-12">
               <header className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end lg:gap-16">
                 <div className="lg:col-span-7">
-                  <SectionLabel className="mb-6">03 / Pricing</SectionLabel>
+                  <SectionLabel className="mb-6">04 / Pricing</SectionLabel>
                   <WaterfallText
                     as="h2"
                     text="Time, by the hour."
@@ -270,7 +361,7 @@ export default function Home() {
               </header>
 
               <ul className="mt-14 divide-y divide-hairline border-y border-hairline sm:mt-20">
-                {PRICES.map((p) => (
+                {prices.map((p) => (
                   <li
                     key={p.duration}
                     className="grid grid-cols-1 items-baseline gap-3 py-10 sm:grid-cols-12 sm:gap-8 sm:py-14"
@@ -285,7 +376,7 @@ export default function Home() {
                       className="font-display text-2xl tracking-[-0.01em] text-ink sm:col-span-3 sm:text-3xl"
                       style={{ fontWeight: 400 }}
                     >
-                      from {p.from}
+                      from ₹{p.from.toLocaleString("en-IN")}
                     </p>
                     <p className="text-[15px] leading-[1.65] text-muted sm:col-span-6">
                       {p.note}
@@ -296,7 +387,8 @@ export default function Home() {
 
               <div className="mt-12 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-[13px] text-muted">
-                  Pricing varies by room. Add-ons available.
+                  Per room, not per head. Celebration and add-ons priced at
+                  booking.
                 </p>
                 <TicketButton href="/book" size="md">
                   Reserve

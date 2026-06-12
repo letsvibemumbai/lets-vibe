@@ -7,11 +7,15 @@ import {
 import {
   ArrowDownRight,
   ArrowUpRight,
+  Banknote,
+  CircleDollarSign,
   Scale,
+  Smartphone,
   TrendingUp,
   Wallet,
 } from "lucide-react";
 import {
+  getCollectionSummary,
   getExpensesByCategory,
   getRevenueByScreen,
   getRevenueBySource,
@@ -33,6 +37,14 @@ const CATEGORY_COLORS = [
   "#38BDF8", // sky
   "#A78BFA", // violet
   "#94A3B8", // slate
+];
+// Order matches aggregate's PAYMENT_METHODS: upi, cash, razorpay, card, bank.
+const METHOD_COLORS = [
+  "#10B981", // UPI — emerald
+  "#FB923C", // Cash — orange
+  "#38BDF8", // Online (Razorpay) — sky
+  "#A78BFA", // Card — violet
+  "#94A3B8", // Bank — slate
 ];
 
 type SP = Record<string, string | string[] | undefined>;
@@ -69,15 +81,22 @@ export default async function AdminAccountingPage({
   const sp = await searchParams;
   const { from, to } = parseRange(sp);
 
-  const [revenueByScreen, revenueBySource, expensesByCategory] = await Promise.all([
-    getRevenueByScreen(from, to),
-    getRevenueBySource(from, to),
-    getExpensesByCategory(from, to),
-  ]);
+  const [revenueByScreen, revenueBySource, expensesByCategory, collection] =
+    await Promise.all([
+      getRevenueByScreen(from, to),
+      getRevenueBySource(from, to),
+      getExpensesByCategory(from, to),
+      getCollectionSummary(from, to),
+    ]);
 
   const totalRevenue = revenueByScreen.reduce((s, b) => s + b.value, 0);
   const totalExpenses = expensesByCategory.reduce((s, b) => s + b.value, 0);
   const net = totalRevenue - totalExpenses;
+
+  const upiCollected =
+    collection.byMethod.find((b) => b.key === "upi")?.value ?? 0;
+  const cashCollected =
+    collection.byMethod.find((b) => b.key === "cash")?.value ?? 0;
   const periodLabel = `${format(parseISO(from), "d MMM yyyy")} → ${format(
     parseISO(to),
     "d MMM yyyy",
@@ -113,6 +132,48 @@ export default async function AdminAccountingPage({
           value={net}
           tone={net >= 0 ? "up" : "down"}
           subtitle={net >= 0 ? "In the black" : "In the red"}
+        />
+      </div>
+
+      <section>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground/55">
+          Money collected
+        </h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <BalanceCard
+            icon={<Smartphone className="h-4 w-4" />}
+            label="UPI collected"
+            value={upiCollected}
+            accent="text-emerald-700"
+          />
+          <BalanceCard
+            icon={<Banknote className="h-4 w-4" />}
+            label="Cash collected"
+            value={cashCollected}
+            accent="text-orange-600"
+          />
+          <BalanceCard
+            icon={<CircleDollarSign className="h-4 w-4" />}
+            label="Total collected"
+            value={collection.totalCollected}
+            accent="text-foreground"
+          />
+          <BalanceCard
+            icon={<Wallet className="h-4 w-4" />}
+            label="Outstanding (due at venue)"
+            value={collection.outstanding}
+            accent={collection.outstanding > 0 ? "text-rose-700" : "text-foreground"}
+          />
+        </div>
+      </section>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <PieCard
+          title="Collected by payment method"
+          icon={<Wallet className="h-4 w-4" />}
+          data={collection.byMethod}
+          colors={METHOD_COLORS}
+          total={collection.totalCollected}
         />
       </div>
 
@@ -170,6 +231,32 @@ function SummaryCard({
         {formatINR(value)}
       </p>
       <p className="mt-1 text-xs text-foreground/55">{subtitle}</p>
+    </div>
+  );
+}
+
+function BalanceCard({
+  icon,
+  label,
+  value,
+  accent,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+  accent: string;
+}) {
+  return (
+    <div className="rounded-3xl bg-card p-5 ring-1 ring-hairline">
+      <div className="flex items-center gap-2 text-foreground/60">
+        {icon}
+        <span className="text-xs font-semibold uppercase tracking-wider">
+          {label}
+        </span>
+      </div>
+      <p className={cn("mt-3 font-display text-2xl", accent)}>
+        {formatINR(value)}
+      </p>
     </div>
   );
 }

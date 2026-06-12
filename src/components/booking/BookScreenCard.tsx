@@ -1,19 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { photoUrl, type PhotoKey } from "@/lib/photos";
 
 type ScreenTheme = "beach" | "grass" | "forest";
 
-const THEME_PHOTO: Record<ScreenTheme, PhotoKey> = {
-  beach: "screen-beach",
-  grass: "screen-grass",
-  forest: "screen-forest",
-};
-
 const THEME_BLURB: Record<ScreenTheme, string> = {
   beach: "Warm sand palette. Sundown amber. Easy for six to eight.",
-  grass: "Soft and intimate. Built for two. Romantic setup, by request.",
+  grass: "Soft and intimate. Built for two. Celebration-ready.",
   forest: "Tall ceilings, a bathtub, a swing. Best for groups of eight.",
 };
 
@@ -27,8 +20,9 @@ type Props = {
   theme: ScreenTheme;
   name: string;
   startingPrice: number;
+  /** Resolved image (admin upload or curated fallback) from screenImageUrl(). */
+  imageUrl: string;
   href: string;
-  romanticBadge?: boolean;
 };
 
 /**
@@ -39,8 +33,8 @@ export function BookScreenCard({
   theme,
   name,
   startingPrice,
+  imageUrl,
   href,
-  romanticBadge,
 }: Props) {
   return (
     <Link
@@ -50,7 +44,7 @@ export function BookScreenCard({
     >
       <div className="relative aspect-[4/5] w-full overflow-hidden">
         <Image
-          src={photoUrl(THEME_PHOTO[theme], 1000)}
+          src={imageUrl}
           alt={`${name} screen`}
           fill
           sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
@@ -65,12 +59,6 @@ export function BookScreenCard({
         <span className="absolute left-4 top-4 inline-flex items-center rounded-sm bg-cream/90 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.22em] text-ink/75 backdrop-blur">
           {theme}
         </span>
-
-        {romanticBadge && (
-          <span className="absolute right-4 top-4 inline-flex items-center rounded-sm bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-cream">
-            Romantic add-on
-          </span>
-        )}
 
         <div className="absolute inset-x-4 bottom-4 flex items-end justify-between gap-3 text-cream">
           <div>

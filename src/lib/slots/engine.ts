@@ -34,7 +34,7 @@ export function rangesOverlap(
   return aStart < bEnd && bStart < aEnd;
 }
 
-function istDateAndMinutes(d: Date): { date: string; minutes: number } {
+export function istDateAndMinutes(d: Date): { date: string; minutes: number } {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Kolkata",
     year: "numeric",

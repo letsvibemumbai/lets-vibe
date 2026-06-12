@@ -185,7 +185,8 @@ export function ScreenEditForm({ screen }: Props) {
           <PriceField label="3 hours" value={price3h} onChange={setPrice3h} />
         </div>
         <p className="mt-4 text-xs text-foreground/55">
-          Per-screen add-ons (romantic setup, decor, etc.) are managed under{" "}
+          The Celebration package and à la carte add-ons (cake, balloons,
+          lights, fog, petals) are managed under{" "}
           <a className="underline" href="/admin/addons">Add-ons</a>.
         </p>
       </Section>

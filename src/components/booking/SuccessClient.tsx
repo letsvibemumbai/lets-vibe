@@ -1,13 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
 import { QuietButton, SectionLabel } from "@/components/editorial";
+import { EntryPass } from "@/components/booking/EntryPass";
+import { screenImageUrl } from "@/lib/booking/constants";
+import { balanceDue, totalCollected } from "@/lib/booking/payments";
 import type { Booking, Screen } from "@/types";
 
-type Props = { booking: Booking; screen: Screen };
+type Props = { booking: Booking; screen: Screen; entryQr: string };
 
 function formatDate(date: string): string {
   return new Date(`${date}T00:00:00`).toLocaleDateString("en-IN", {
@@ -22,7 +26,9 @@ function formatDate(date: string): string {
  * Editorial success screen. A thin ink stroked checkmark draws in, then
  * "Reserved." in Fraunces italic. No confetti, no exclamation, no bouncing.
  */
-export function SuccessClient({ booking, screen }: Props) {
+export function SuccessClient({ booking, screen, entryQr }: Props) {
+  const collected = totalCollected(booking);
+  const due = balanceDue(booking);
   const shareText = `Reserved ${screen.name} on Let's Vibe — ${formatDate(
     booking.date,
   )}, ${booking.startTime}–${booking.endTime}. Booking ${booking.id}.`;
@@ -100,6 +106,16 @@ export function SuccessClient({ booking, screen }: Props) {
         transition={{ duration: 0.7, ease: [0.2, 0.7, 0.2, 1], delay: 1.3 }}
         className="mt-14 w-full border-y border-hairline py-8"
       >
+        <div className="relative mb-7 aspect-[21/9] w-full overflow-hidden rounded-sm bg-cream-tonal">
+          <Image
+            src={screenImageUrl(screen, 1200)}
+            alt={screen.name}
+            fill
+            sizes="(max-width: 768px) 100vw, 672px"
+            className="object-cover photo-grade"
+            unoptimized
+          />
+        </div>
         <div className="flex items-start justify-between gap-4">
           <div>
             <SectionLabel>Booking ID · save this</SectionLabel>
@@ -124,16 +140,39 @@ export function SuccessClient({ booking, screen }: Props) {
           />
           <Row label="Guests" value={String(booking.guestCount)} />
           <Row
-            label="Paid"
+            label="Total"
             value={`₹${booking.amount.toLocaleString("en-IN")}`}
           />
+          {due > 0 ? (
+            <>
+              <Row
+                label="Paid now"
+                value={`₹${collected.toLocaleString("en-IN")}`}
+              />
+              <Row
+                label="Due at venue"
+                value={`₹${due.toLocaleString("en-IN")} · cash / UPI`}
+              />
+            </>
+          ) : (
+            <Row label="Paid" value="In full" />
+          )}
         </dl>
       </motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.2, 0.7, 0.2, 1], delay: 1.5 }}
+        transition={{ duration: 0.7, ease: [0.2, 0.7, 0.2, 1], delay: 1.45 }}
+        className="mt-12 w-full border-t border-hairline pt-10"
+      >
+        <EntryPass qrDataUrl={entryQr} checkInStatus={booking.checkInStatus} />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: [0.2, 0.7, 0.2, 1], delay: 1.6 }}
         className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3"
       >
         <QuietButton href={waHref} variant="link" size="md" arrow>

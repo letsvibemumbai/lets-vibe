@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { FirebaseAnalytics } from "@/components/FirebaseAnalytics";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { SmoothScroll } from "@/components/ui-vibe/SmoothScroll";
+import { appUrl } from "@/lib/app-url";
 import "./globals.css";
 
 /**
@@ -63,7 +64,7 @@ const hand = Caveat({
   weight: ["400", "500", "600", "700"],
 });
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://letsvibe.example";
+const APP_URL = appUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),

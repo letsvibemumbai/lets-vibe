@@ -30,8 +30,11 @@ function isoDay(d: Date): string {
 
 function totalsFor(bookings: Booking[]): Totals {
   let revenue = 0;
+  // Billed revenue (the booking's full value). Matches the accounting page and
+  // is stable for the new 50%-deposit bookings (counts the whole bill, not just
+  // the collected deposit). For legacy data this equals the old amountPaid||amount.
   for (const b of bookings) {
-    if (REVENUE_STATUSES.has(b.status)) revenue += b.amountPaid || b.amount;
+    if (REVENUE_STATUSES.has(b.status)) revenue += b.amount;
   }
   return { count: bookings.length, revenue };
 }
@@ -108,7 +111,7 @@ export function revenueByDayForMonth(
   for (const b of bookings) {
     if (!REVENUE_STATUSES.has(b.status)) continue;
     const slot = byDate.get(b.date);
-    if (slot) slot.revenue += b.amountPaid || b.amount;
+    if (slot) slot.revenue += b.amount;
   }
   return days;
 }

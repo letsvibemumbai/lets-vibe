@@ -1,12 +1,20 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Calendar, Clock, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getBooking } from "@/lib/db/bookings.server";
-import { SCREEN_PRESETS, isScreenId } from "@/lib/booking/constants";
+import { balanceDue, totalCollected } from "@/lib/booking/payments";
+import { isScreenId, screenImageUrl } from "@/lib/booking/constants";
+import { getScreenResolved } from "@/lib/db/screens.server";
+import { qrDataUrl } from "@/lib/qr";
+import { buildCheckInUrl } from "@/lib/checkin/token";
+import { appUrl } from "@/lib/app-url";
+import { EntryPass } from "@/components/booking/EntryPass";
 import { SectionLabel } from "@/components/editorial";
 import type { BookingStatus } from "@/types";
 
 export const metadata = { title: "Booking status · Let's Vibe" };
+export const dynamic = "force-dynamic";
 
 const STATUS_LABEL: Record<BookingStatus, { label: string; tone: string }> = {
   pending: { label: "Pending payment", tone: "text-accent" },
@@ -44,8 +52,12 @@ export default async function StatusPage({
     return <Card title="Booking error">Invalid screen on booking record.</Card>;
   }
 
-  const screen = SCREEN_PRESETS[booking.screenId];
+  const screen = await getScreenResolved(booking.screenId);
   const status = STATUS_LABEL[booking.status];
+  const entryQr =
+    booking.status === "confirmed"
+      ? await qrDataUrl(buildCheckInUrl(appUrl(), booking.id))
+      : null;
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -58,7 +70,18 @@ export default async function StatusPage({
       </h1>
       <p className="mt-3 font-mono text-[12px] text-muted">{booking.id}</p>
 
-      <div className="mt-12 border-y border-hairline py-10">
+      <div className="relative mt-8 aspect-[21/9] w-full overflow-hidden rounded-sm bg-cream-tonal">
+        <Image
+          src={screenImageUrl(screen, 1200)}
+          alt={screen.name}
+          fill
+          sizes="(max-width: 768px) 100vw, 672px"
+          className="object-cover photo-grade"
+          unoptimized
+        />
+      </div>
+
+      <div className="mt-8 border-y border-hairline py-10">
         <div className="flex items-baseline justify-between gap-4 border-b border-hairline pb-6">
           <h2
             className="font-display text-3xl leading-none text-ink"
@@ -85,6 +108,20 @@ export default async function StatusPage({
           />
           <Field icon={Users} label="Guests" value={String(booking.guestCount)} />
           <Field label="Total" value={`₹${booking.amount.toLocaleString("en-IN")}`} />
+          {balanceDue(booking) > 0 ? (
+            <>
+              <Field
+                label="Paid"
+                value={`₹${totalCollected(booking).toLocaleString("en-IN")}`}
+              />
+              <Field
+                label="Balance due"
+                value={`₹${balanceDue(booking).toLocaleString("en-IN")} · cash / UPI at venue`}
+              />
+            </>
+          ) : (
+            <Field label="Payment" value="Paid in full" />
+          )}
         </dl>
 
         <div className="mt-8 border-t border-hairline pt-6 text-[14px] text-muted">
@@ -105,6 +142,12 @@ export default async function StatusPage({
           </p>
         ) : null}
       </div>
+
+      {entryQr && (
+        <div className="mt-10 border-t border-hairline pt-10">
+          <EntryPass qrDataUrl={entryQr} checkInStatus={booking.checkInStatus} />
+        </div>
+      )}
 
       <p className="mt-12 text-center text-[11px] uppercase tracking-[0.22em] text-muted">
         <Link href="/" className="transition-colors hover:text-ink">

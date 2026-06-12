@@ -3,10 +3,12 @@ import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Stepper } from "@/components/booking/Stepper";
 import { DateSlotPicker } from "@/components/booking/DateSlotPicker";
-import { SCREEN_PRESETS, isScreenId } from "@/lib/booking/constants";
+import { isScreenId } from "@/lib/booking/constants";
+import { getScreenResolved } from "@/lib/db/screens.server";
 import { DisplayHeading, SectionLabel } from "@/components/editorial";
 
 export const metadata = { title: "Choose a date · Let's Vibe" };
+export const dynamic = "force-dynamic";
 
 export default async function BookScreenPage({
   params,
@@ -15,7 +17,7 @@ export default async function BookScreenPage({
 }) {
   const { id } = await params;
   if (!isScreenId(id)) redirect("/book");
-  const screen = SCREEN_PRESETS[id];
+  const screen = await getScreenResolved(id);
 
   return (
     <>

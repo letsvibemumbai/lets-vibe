@@ -150,6 +150,7 @@ export function BookingEditForm({ booking, items, packages }: Props) {
           compact
           items={items}
           packages={packages}
+          screenId={booking.screenId}
           value={selections}
           onChange={setSelections}
         />

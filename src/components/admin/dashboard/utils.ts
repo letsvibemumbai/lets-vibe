@@ -56,7 +56,13 @@ export function summarizeAddOns(addOns: Booking["addOns"]): string {
   const parts: string[] = [];
   if (addOns.selections?.length) {
     for (const sel of addOns.selections) {
-      parts.push(sel.quantity > 1 ? `${sel.name} ×${sel.quantity}` : sel.name);
+      parts.push(
+        sel.experience
+          ? `${sel.name} (experience)`
+          : sel.quantity > 1
+            ? `${sel.name} ×${sel.quantity}`
+            : sel.name,
+      );
     }
   }
   if (addOns.decorations) parts.push("Decorations note");

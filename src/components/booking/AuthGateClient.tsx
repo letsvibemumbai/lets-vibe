@@ -15,7 +15,6 @@ type Props = { screenId: ScreenId };
 export function AuthGateClient({ screenId }: Props) {
   const router = useRouter();
   const { user, loading } = useAuthUser();
-  const draft = useBookingStore();
   const [signingIn, setSigningIn] = useState(false);
 
   const [hydrated, setHydrated] = useState(() =>
@@ -30,10 +29,13 @@ export function AuthGateClient({ screenId }: Props) {
 
   useEffect(() => {
     if (!hydrated) return;
-    if (!draft.date || !draft.duration || !draft.startTime) {
+    // Read the live store, not the render snapshot — see PaymentClient note:
+    // the first post-rehydration render can still hold the empty SSR snapshot.
+    const d = useBookingStore.getState();
+    if (!d.date || !d.duration || !d.startTime) {
       router.replace(`/book/${screenId}`);
     }
-  }, [hydrated, draft.date, draft.duration, draft.startTime, screenId, router]);
+  }, [hydrated, screenId, router]);
 
   useEffect(() => {
     if (loading) return;
@@ -43,9 +45,16 @@ export function AuthGateClient({ screenId }: Props) {
   async function handleGoogle() {
     if (signingIn) return;
     setSigningIn(true);
+    // Safety net: a browser's COOP (or Google's own auth page) can stop Firebase
+    // from detecting a manually-closed popup, which would otherwise leave this
+    // button stuck on "Opening Google". A real sign-in completes via onAuthChange
+    // → the redirect effect, so resetting the button here is harmless.
+    const safety = window.setTimeout(() => setSigningIn(false), 60_000);
     try {
       await signInWithGoogle();
+      window.clearTimeout(safety);
     } catch (err) {
+      window.clearTimeout(safety);
       const code = (err as { code?: string })?.code ?? "";
       if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
         setSigningIn(false);

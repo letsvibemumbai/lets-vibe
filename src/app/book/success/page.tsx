@@ -1,9 +1,14 @@
 import { SuccessClient } from "@/components/booking/SuccessClient";
 import { getBooking } from "@/lib/db/bookings.server";
-import { SCREEN_PRESETS, isScreenId } from "@/lib/booking/constants";
+import { isScreenId } from "@/lib/booking/constants";
+import { getScreenResolved } from "@/lib/db/screens.server";
+import { qrDataUrl } from "@/lib/qr";
+import { buildCheckInUrl } from "@/lib/checkin/token";
+import { appUrl } from "@/lib/app-url";
 import { QuietButton, SectionLabel } from "@/components/editorial";
 
 export const metadata = { title: "Reserved · Let's Vibe" };
+export const dynamic = "force-dynamic";
 
 export default async function SuccessPage({
   searchParams,
@@ -23,13 +28,15 @@ export default async function SuccessPage({
   if (!isScreenId(booking.screenId))
     return <ErrorState message="Invalid screen on booking" />;
 
-  const screen = SCREEN_PRESETS[booking.screenId];
+  const screen = await getScreenResolved(booking.screenId);
 
   if (booking.status !== "confirmed") {
     return <PendingState bookingId={booking.id} />;
   }
 
-  return <SuccessClient booking={booking} screen={screen} />;
+  const entryQr = await qrDataUrl(buildCheckInUrl(appUrl(), booking.id));
+
+  return <SuccessClient booking={booking} screen={screen} entryQr={entryQr} />;
 }
 
 function CenteredCard({

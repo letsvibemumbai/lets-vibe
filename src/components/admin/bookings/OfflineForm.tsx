@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { reconcileSelectionsForScreen } from "@/lib/booking/addons";
 import { AddOnsPicker } from "@/components/booking/AddOnsPicker";
 import { calculateBookingPrice } from "@/lib/slots/pricing";
 import type { Slot } from "@/lib/slots/engine";
@@ -97,6 +98,25 @@ export function OfflineBookingForm({ screens, items, packages }: Props) {
   useEffect(() => {
     if (!amountManuallyEdited) setAmount(computedPrice);
   }, [computedPrice, amountManuallyEdited]);
+
+  // Screen switches mid-form: drop items the new screen doesn't offer (e.g.
+  // Rose petals off forest) and re-snapshot per-screen package prices.
+  useEffect(() => {
+    setSelections((prev) => {
+      const { selections: next, removed } = reconcileSelectionsForScreen(
+        prev,
+        items,
+        packages,
+        screenId,
+      );
+      if (removed.length) {
+        toast.info(
+          `Removed (not offered on this screen): ${removed.join(", ")}`,
+        );
+      }
+      return next;
+    });
+  }, [screenId, items, packages]);
 
   useEffect(() => {
     setStartTime(null);
@@ -298,6 +318,7 @@ export function OfflineBookingForm({ screens, items, packages }: Props) {
           compact
           items={items}
           packages={packages}
+          screenId={screenId}
           value={selections}
           onChange={setSelections}
         />

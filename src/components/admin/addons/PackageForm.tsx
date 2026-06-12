@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Save, Star, Trash2 } from "lucide-react";
+import { Loader2, Save, Sparkles, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,9 @@ import {
   deleteAddonPackageAction,
   updateAddonPackageAction,
 } from "@/app/actions/addons";
-import type { AddonItem, AddonPackage } from "@/types";
+import { SCREEN_IDS } from "@/lib/booking/constants";
+import { SCREEN_LABEL } from "@/components/admin/dashboard/utils";
+import type { AddonItem, AddonPackage, ScreenId } from "@/types";
 
 type Props = {
   /** When undefined, the form creates a new package. */
@@ -38,7 +40,23 @@ export function PackageForm({ pkg, items }: Props) {
   const [itemIds, setItemIds] = useState<string[]>(pkg?.itemIds ?? []);
   const [active, setActive] = useState(pkg?.active ?? true);
   const [featured, setFeatured] = useState(pkg?.featured ?? false);
+  const [includesAddons, setIncludesAddons] = useState(pkg?.includesAddons ?? false);
   const [sortOrder, setSortOrder] = useState(pkg?.sortOrder ?? 100);
+  // Per-room price overrides kept as strings so blank = "use base price".
+  const [priceByScreen, setPriceByScreen] = useState<Partial<Record<ScreenId, string>>>(
+    () => {
+      const initial: Partial<Record<ScreenId, string>> = {};
+      for (const id of SCREEN_IDS) {
+        const override = pkg?.priceByScreen?.[id];
+        if (typeof override === "number") initial[id] = String(override);
+      }
+      return initial;
+    },
+  );
+
+  function setScreenPrice(id: ScreenId, value: string) {
+    setPriceByScreen((prev) => ({ ...prev, [id]: value }));
+  }
 
   const itemTotal = useMemo(() => {
     if (kind !== "bundle") return 0;
@@ -59,6 +77,15 @@ export function PackageForm({ pkg, items }: Props) {
       toast.error("Pick at least one item for a bundle package");
       return;
     }
+    const priceOverrides: Partial<Record<ScreenId, number>> = {};
+    for (const id of SCREEN_IDS) {
+      const raw = (priceByScreen[id] ?? "").trim();
+      if (!raw) continue;
+      const value = Number(raw);
+      if (Number.isFinite(value) && value >= 0) {
+        priceOverrides[id] = Math.round(value);
+      }
+    }
     const payload = {
       name: name.trim(),
       description: description.trim() || undefined,
@@ -68,6 +95,8 @@ export function PackageForm({ pkg, items }: Props) {
       itemIds: kind === "bundle" ? itemIds : [],
       active,
       featured: featured || undefined,
+      includesAddons,
+      priceByScreen: priceOverrides,
       sortOrder: Math.max(0, Math.min(9999, Math.round(sortOrder))),
     };
     startTransition(async () => {
@@ -111,7 +140,7 @@ export function PackageForm({ pkg, items }: Props) {
             onChange={(e) => setName(e.target.value)}
             required
             maxLength={80}
-            placeholder="Romantic Setup"
+            placeholder="Celebration"
           />
         </Field>
         <Field id="description" label="Description (optional)">
@@ -121,7 +150,7 @@ export function PackageForm({ pkg, items }: Props) {
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
             maxLength={280}
-            placeholder="Petals, candles, a heart cake, and a private bench for two."
+            placeholder="Cake, balloons, lights, fog — the room is dressed before you arrive."
           />
         </Field>
       </Section>
@@ -223,6 +252,28 @@ export function PackageForm({ pkg, items }: Props) {
             <p className="text-xs text-foreground/55">Lower numbers appear first.</p>
           </Field>
         </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          {SCREEN_IDS.map((id) => (
+            <Field
+              key={id}
+              id={`price-${id}`}
+              label={`${SCREEN_LABEL[id]} price (₹, optional)`}
+            >
+              <Input
+                id={`price-${id}`}
+                type="number"
+                min={0}
+                value={priceByScreen[id] ?? ""}
+                onChange={(e) => setScreenPrice(id, e.target.value)}
+                placeholder={`${price}`}
+              />
+            </Field>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-foreground/55">
+          Set a different price per room — e.g. Celebration costs more in the
+          Forest. Blank = use base price.
+        </p>
       </Section>
 
       <Section title="Image (optional)">
@@ -266,6 +317,26 @@ export function PackageForm({ pkg, items }: Props) {
               </span>
               <span className="block text-xs text-foreground/55">
                 Highlighted on the booking form (visual emphasis only).
+              </span>
+            </span>
+          </label>
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={includesAddons}
+              onChange={(e) => setIncludesAddons(e.target.checked)}
+              className="mt-1 h-4 w-4"
+            />
+            <span>
+              <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                <Sparkles className="h-3.5 w-3.5" /> Experience package (includes
+                all decoration add-ons)
+              </span>
+              <span className="block text-xs text-foreground/55">
+                Shown in the booking form&apos;s &ldquo;Choose your
+                experience&rdquo; selector next to the plain Movie option.
+                Customers picking it can&apos;t add à la carte items —
+                they&apos;re included.
               </span>
             </span>
           </label>

@@ -94,6 +94,10 @@ export default async function AdminReportsPage({
             {report.totals.bookingCount} revenue-earning bookings ·{" "}
             {report.totals.expenseCount} expense entries
           </p>
+          <p className="mt-1 text-xs text-foreground/55">
+            Collected {formatINR(report.totals.collected)} · Outstanding{" "}
+            {formatINR(report.totals.outstanding)} (due at venue)
+          </p>
         </Section>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -111,6 +115,11 @@ export default async function AdminReportsPage({
             title="Revenue by duration"
             data={report.revenueByDuration}
             total={report.totals.revenue}
+          />
+          <BucketTable
+            title="Collected by payment method"
+            data={report.collectedByMethod}
+            total={report.totals.collected}
           />
           <BucketTable
             title="Expenses by category"

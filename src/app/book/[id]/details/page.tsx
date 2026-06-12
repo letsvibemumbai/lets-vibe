@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { Stepper } from "@/components/booking/Stepper";
 import { DetailsForm } from "@/components/booking/DetailsForm";
-import { SCREEN_PRESETS, isScreenId } from "@/lib/booking/constants";
+import { isScreenId } from "@/lib/booking/constants";
+import { getScreenResolved } from "@/lib/db/screens.server";
 import { listAddonItems, listAddonPackages } from "@/lib/db/addons.server";
 import { DisplayHeading, SectionLabel } from "@/components/editorial";
 
@@ -15,7 +16,7 @@ export default async function DetailsPage({
 }) {
   const { id } = await params;
   if (!isScreenId(id)) redirect("/book");
-  const screen = SCREEN_PRESETS[id];
+  const screen = await getScreenResolved(id);
 
   const [items, packages] = await Promise.all([
     listAddonItems({ activeOnly: true }),

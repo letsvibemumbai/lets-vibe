@@ -321,6 +321,23 @@ describe("calculateBookingPrice", () => {
     expect(result).toBe(2500 + 800 + 500 * 2);
   });
 
+  it("includes an experience package selection like any other selection", () => {
+    const beach = makeScreen();
+    const result = calculateBookingPrice(beach, 2 as Duration, {
+      selections: [
+        {
+          kind: "package",
+          id: "celebration",
+          name: "Celebration",
+          unitPrice: 2000,
+          quantity: 1,
+          experience: true,
+        },
+      ],
+    });
+    expect(result).toBe(2500 + 2000);
+  });
+
   it("treats missing selections as no add-ons", () => {
     const beach = makeScreen();
     expect(calculateBookingPrice(beach, 2 as Duration, {})).toBe(2500);

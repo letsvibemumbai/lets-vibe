@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { motion, useMotionValue, useSpring } from "motion/react";
+import { motion, useMotionValue } from "motion/react";
 import { useTheme } from "next-themes";
 
 /**
@@ -13,6 +13,10 @@ import { useTheme } from "next-themes";
  * - Over a photo (`[data-cursor="photo"]`): trails a small italic
  *   "view" label.
  * - Hidden on touch devices and when the user has `prefers-reduced-motion`.
+ *
+ * Position tracks the pointer 1:1 (raw motion values, no trailing spring) so
+ * the cursor never feels laggy — the native cursor is hidden, so any spring
+ * trailing reads as a slow/heavy cursor. Only the size/state changes animate.
  */
 export function CustomCursor() {
   const { resolvedTheme } = useTheme();
@@ -21,8 +25,6 @@ export function CustomCursor() {
 
   const x = useMotionValue(-40);
   const y = useMotionValue(-40);
-  const sx = useSpring(x, { stiffness: 600, damping: 40, mass: 0.4 });
-  const sy = useSpring(y, { stiffness: 600, damping: 40, mass: 0.4 });
 
   const [visible, setVisible] = React.useState(false);
   const [interactive, setInteractive] = React.useState(false);
@@ -87,7 +89,7 @@ export function CustomCursor() {
     <>
       <motion.div
         aria-hidden
-        style={{ x: sx, y: sy }}
+        style={{ x, y }}
         className="pointer-events-none fixed left-0 top-0 z-[80] -translate-x-1/2 -translate-y-1/2"
       >
         <motion.div
@@ -104,7 +106,7 @@ export function CustomCursor() {
 
       <motion.div
         aria-hidden
-        style={{ x: sx, y: sy }}
+        style={{ x, y }}
         className="pointer-events-none fixed left-0 top-0 z-[81] -translate-x-1/2 -translate-y-1/2"
       >
         <motion.div
@@ -120,7 +122,7 @@ export function CustomCursor() {
       {label && (
         <motion.div
           aria-hidden
-          style={{ x: sx, y: sy }}
+          style={{ x, y }}
           className="pointer-events-none fixed left-0 top-0 z-[82] -translate-x-1/2 -translate-y-1/2"
         >
           <motion.span

@@ -1,3 +1,4 @@
+import { photoUrl, type PhotoKey } from "@/lib/photos";
 import type { Screen, ScreenId } from "@/types";
 
 export const SCREEN_PRESETS: Record<ScreenId, Screen> = {
@@ -17,7 +18,7 @@ export const SCREEN_PRESETS: Record<ScreenId, Screen> = {
     name: "Grass Garden",
     theme: "grass",
     description:
-      "Open-air green for date nights. Pair it with a romantic add-on package.",
+      "Open-air green for date nights. Add the Celebration and it glows.",
     operatingStart: 9,
     operatingEnd: 21,
     basePrices: { "1h": 1800, "2h": 2800, "3h": 3800 },
@@ -47,3 +48,17 @@ export const SCREEN_GRADIENTS: Record<ScreenId, string> = {
   grass: "linear-gradient(135deg, #DCEEC4 0%, #A8D89A 50%, #6BB37A 100%)",
   forest: "linear-gradient(135deg, #BFD7BA 0%, #5C8D6B 55%, #2F5E4B 100%)",
 };
+
+/**
+ * Canonical image for a screen on every customer-facing surface: the
+ * admin-uploaded image when set, otherwise the curated themed photo. Keyed off
+ * the stable screen id (beach/grass/forest), never the free-form `theme` field,
+ * so admins can rename the theme without breaking the fallback art.
+ */
+export function screenImageUrl(
+  screen: { id: ScreenId; imageUrl?: string },
+  width = 1200,
+): string {
+  if (screen.imageUrl) return screen.imageUrl;
+  return photoUrl(`screen-${screen.id}` as PhotoKey, width);
+}

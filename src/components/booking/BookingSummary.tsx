@@ -1,5 +1,8 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { SectionLabel } from "@/components/editorial";
+import { experienceName } from "@/lib/booking/addons";
+import { screenImageUrl } from "@/lib/booking/constants";
 import type { Booking, Screen } from "@/types";
 
 type Props = {
@@ -43,13 +46,29 @@ export function BookingSummary({
   const selections = addOns?.selections ?? [];
   const basePerHour = duration ? Math.round((amount - selections.reduce((s, sel) => s + sel.unitPrice * sel.quantity, 0)) / Math.max(1, duration)) : 0;
   const baseTotal = basePerHour * (duration ?? 0);
+  // The experience selection reads as part of the room, so it leads the ledger.
+  const orderedSelections = [
+    ...selections.filter((sel) => sel.experience),
+    ...selections.filter((sel) => !sel.experience),
+  ];
 
   return (
     <div className={cn("border-y border-hairline py-10", className)}>
+      <div className="relative mb-7 aspect-[16/9] w-full overflow-hidden rounded-sm bg-cream-tonal">
+        <Image
+          src={screenImageUrl(screen, 1000)}
+          alt={screen.name}
+          fill
+          sizes="(max-width: 1024px) 100vw, 640px"
+          className="object-cover photo-grade"
+          unoptimized
+        />
+      </div>
       <SectionLabel>Your reservation</SectionLabel>
 
       <dl className="mt-6 space-y-3 text-[14px]">
         <Row label="Room" value={screen.name} />
+        <Row label="Experience" value={experienceName(addOns)} />
         <Row label="Date" value={formatDate(date)} />
         <Row
           label="Time"
@@ -71,7 +90,7 @@ export function BookingSummary({
               amount={baseTotal}
             />
           ) : null}
-          {selections.map((sel) => (
+          {orderedSelections.map((sel) => (
             <LedgerRow
               key={`${sel.kind}-${sel.id}`}
               label={

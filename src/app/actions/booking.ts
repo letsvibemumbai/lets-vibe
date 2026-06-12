@@ -14,13 +14,16 @@ import {
   minutesToTime,
   timeToMinutes,
 } from "@/lib/slots/engine";
+import { resolveSelectionsAgainstCatalog } from "@/lib/booking/addons";
 import { SCREEN_IDS, SCREEN_PRESETS } from "@/lib/booking/constants";
+import { onlinePortion } from "@/lib/booking/payments";
 import { calculateBookingPrice, applyMembershipDiscount } from "@/lib/slots/pricing";
 import {
   getAddonItem,
   getAddonPackage,
 } from "@/lib/db/addons.server";
 import { customerDocRef, writeCustomerUpsert } from "@/lib/db/customers.server";
+import { maybeSendBookingConfirmation } from "@/lib/email/sendBookingConfirmation";
 import type {
   Availability,
   Slot,
@@ -28,6 +31,7 @@ import type {
 import type {
   Booking,
   BookingAddonSelection,
+  BookingPayment,
   Duration,
   ScreenId,
 } from "@/types";
@@ -69,46 +73,22 @@ function buildPersistedAddOns(
 }
 
 /**
- * Resolve client-submitted selections against Firestore. We never trust the
- * client's price — we look up each item/package by id, reject inactive or
- * missing entries, clamp quantity to the item's `maxQuantity`, and snapshot
- * the resolved name + unit price onto the booking record.
+ * Resolve client-submitted selections against Firestore via the shared
+ * resolver. We never trust the client's price — names and effective
+ * (per-screen) prices are snapshotted from the catalog, inactive entries are
+ * rejected, screen-restricted items are enforced, and Movie-vs-Celebration
+ * exclusivity is checked.
  */
 async function resolveSelections(
   requests: SelectionRequest[],
+  screenId: ScreenId,
 ): Promise<BookingAddonSelection[]> {
-  if (requests.length === 0) return [];
-  const resolved: BookingAddonSelection[] = [];
-  for (const req of requests) {
-    if (req.kind === "item") {
-      const item = await getAddonItem(req.id);
-      if (!item || !item.active) {
-        throw new Error(`ADDON_ITEM_UNAVAILABLE:${req.id}`);
-      }
-      const qty = Math.min(req.quantity, Math.max(1, item.maxQuantity));
-      resolved.push({
-        kind: "item",
-        id: item.id,
-        name: item.name,
-        unitPrice: item.price,
-        quantity: qty,
-      });
-    } else {
-      const pkg = await getAddonPackage(req.id);
-      if (!pkg || !pkg.active) {
-        throw new Error(`ADDON_PACKAGE_UNAVAILABLE:${req.id}`);
-      }
-      // Packages are inherently single-unit on a booking.
-      resolved.push({
-        kind: "package",
-        id: pkg.id,
-        name: pkg.name,
-        unitPrice: pkg.price,
-        quantity: 1,
-      });
-    }
-  }
-  return resolved;
+  return resolveSelectionsAgainstCatalog(
+    requests,
+    screenId,
+    { getItem: getAddonItem, getPackage: getAddonPackage },
+    { allowInactive: false, enforceScreenAvailability: true },
+  );
 }
 
 const CreateBookingSchema = z.object({
@@ -122,6 +102,8 @@ const CreateBookingSchema = z.object({
   /** Firebase Auth uid of the signed-in guest, if any. Enables the membership
    * discount and links the booking to the user's /account dashboard. */
   customerUid: z.string().trim().min(1).max(128).optional(),
+  /** Pay the whole bill online, or just the 50% deposit (rest at the venue). */
+  paymentPlan: z.enum(["full", "deposit"]).default("full"),
 });
 
 const MEMBERSHIPS = "memberships";
@@ -190,6 +172,7 @@ export async function createBookingAndOrder(
   // server, not the client. Empty when the booking has no dynamic add-ons.
   const resolvedSelections = await resolveSelections(
     payload.addOns.selections ?? [],
+    payload.screenId,
   );
   const addOnsForPricing = {
     ...payload.addOns,
@@ -233,6 +216,8 @@ export async function createBookingAndOrder(
       addOns: buildPersistedAddOns(payload.addOns, resolvedSelections),
       amount,
       amountPaid: 0,
+      payments: [],
+      paymentPlan: payload.paymentPlan,
       status: "pending",
       source: "online",
       createdAt: FieldValue.serverTimestamp(),
@@ -241,15 +226,20 @@ export async function createBookingAndOrder(
     return ref.id;
   });
 
+  // Capture the full bill or just the 50% deposit, per the chosen plan. The
+  // remainder (for a deposit) is collected at the venue.
+  const onlineAmount = onlinePortion(amount, payload.paymentPlan);
+
   // Razorpay order — outside the transaction (external call).
   const order = await razorpay().orders.create({
-    amount: rupeesToPaise(amount),
+    amount: rupeesToPaise(onlineAmount),
     currency: "INR",
     receipt: bookingId,
     notes: {
       screenId: payload.screenId,
       date: payload.date,
       startTime: payload.startTime,
+      paymentPlan: payload.paymentPlan,
     },
   });
 
@@ -264,7 +254,8 @@ export async function createBookingAndOrder(
   return {
     bookingId,
     orderId: order.id,
-    amount,
+    // The amount Razorpay will actually charge (full bill or deposit).
+    amount: onlineAmount,
     currency: "INR",
     key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
   };
@@ -287,6 +278,7 @@ export async function confirmBookingDirect(
 
   const resolvedSelections = await resolveSelections(
     payload.addOns.selections ?? [],
+    payload.screenId,
   );
   const grossAmount = calculateBookingPrice(screen, payload.duration, {
     ...payload.addOns,
@@ -372,6 +364,8 @@ export async function confirmBookingDirect(
       amount,
       ...(discount > 0 ? { originalAmount: grossAmount, discount } : {}),
       amountPaid: 0,
+      payments: [],
+      paymentPlan: payload.paymentPlan,
       status: "confirmed",
       source: "online",
       notes: "Reserved without online payment (Razorpay bypass — temporary).",
@@ -380,6 +374,9 @@ export async function confirmBookingDirect(
     });
     return { bookingId: ref.id, amount, discount };
   });
+
+  // Fire the confirmation email (idempotent + non-fatal).
+  await maybeSendBookingConfirmation(result.bookingId);
 
   return result;
 }
@@ -410,12 +407,32 @@ export async function verifyPayment(
     throw new Error("ORDER_MISMATCH");
   }
 
+  const plan = booking.paymentPlan ?? "full";
+  const captured = onlinePortion(booking.amount, plan);
+  const existing = booking.payments ?? [];
+  const onlinePayment: BookingPayment = {
+    id: crypto.randomUUID(),
+    amount: captured,
+    method: "razorpay",
+    channel: "online",
+    kind: plan === "deposit" ? "deposit" : "full",
+    at: Date.now(),
+    razorpayPaymentId,
+  };
+  const payments = [...existing, onlinePayment];
+  const amountPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+
   await ref.update({
     status: "confirmed",
-    amountPaid: booking.amount,
+    amountPaid,
+    payments,
+    paymentMethod: "razorpay",
     razorpayPaymentId,
     updatedAt: FieldValue.serverTimestamp(),
   });
+
+  // Fire the confirmation email (idempotent + non-fatal).
+  await maybeSendBookingConfirmation(bookingId);
 
   return { ok: true };
 }

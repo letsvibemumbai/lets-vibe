@@ -23,8 +23,8 @@ const FAQS = [
     a: "Beach Vibes fits 6–8, Grass Garden fits 2–4 (built for two), Forest Retreat fits 8–12. Larger group? Reach out — we'll plan around it.",
   },
   {
-    q: "Tell us about the romantic setup.",
-    a: "Rose petals, candles, a private bench for two, a heart-shaped cake, and a curated pre-show playlist. ₹800 add-on, Grass screen only.",
+    q: "What's the Celebration?",
+    a: "Cake, balloons, fairy lights, fog — and rose petals in the Forest room. We set everything before you walk in. Priced per room; the exact figure shows at booking. Prefer to pick? Every decoration is also available à la carte with a Movie booking.",
   },
   {
     q: "What is the screen quality like?",
@@ -32,7 +32,7 @@ const FAQS = [
   },
   {
     q: "Can we bring our own decorations?",
-    a: "Yes — balloons, banners, signs are welcome. Nothing that needs to be stapled, glued, or set on fire. Mention it at booking so we can plan setup time.",
+    a: "Yes — balloons, banners, signs are welcome. Nothing that needs to be stapled, glued, or set on fire. Mention it at booking so we can plan setup time — or skip the carrying; every decoration we offer can be added at booking.",
   },
   {
     q: "Is the room private and secure?",

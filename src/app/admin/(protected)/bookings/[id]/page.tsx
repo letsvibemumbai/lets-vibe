@@ -1,7 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowLeft, CreditCard, IndianRupee, Receipt, User } from "lucide-react";
+import {
+  ArrowLeft,
+  CreditCard,
+  IndianRupee,
+  QrCode,
+  Receipt,
+  ScanLine,
+  User,
+} from "lucide-react";
 import { getBooking, timestampToMillis } from "@/lib/db/bookings.server";
 import { listAddonItems, listAddonPackages } from "@/lib/db/addons.server";
 import {
@@ -13,9 +21,17 @@ import { StatusBadge } from "@/components/admin/dashboard/StatusBadge";
 import { BookingEditForm } from "@/components/admin/bookings/EditForm";
 import { CancelBookingButton } from "@/components/admin/bookings/CancelButton";
 import { RefundButton } from "@/components/admin/bookings/RefundButton";
+import { CollectPaymentPanel } from "@/components/admin/payments/CollectPaymentPanel";
+import type { CheckInStatus } from "@/types";
 
 export const metadata = { title: "Booking · Let's Vibe Admin" };
 export const dynamic = "force-dynamic";
+
+const ENTRY_LABEL: Record<CheckInStatus, string> = {
+  awaiting: "Awaiting",
+  admitted: "Admitted",
+  rejected: "Rejected",
+};
 
 export default async function BookingDetailPage({
   params,
@@ -70,6 +86,13 @@ export default async function BookingDetailPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href={`/admin/check-in/${booking.id}`}
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-foreground/80 ring-1 ring-hairline-strong transition-colors hover:bg-card"
+          >
+            <QrCode className="h-3.5 w-3.5" />
+            Door check-in
+          </Link>
           {canRefund && <RefundButton booking={booking} />}
           {canCancel && <CancelBookingButton booking={booking} />}
         </div>
@@ -87,11 +110,17 @@ export default async function BookingDetailPage({
             title="Payment"
             icon={<CreditCard className="h-4 w-4" />}
           >
-            <dl className="space-y-2 text-sm">
-              <Row label="Amount" value={formatINR(booking.amount)} />
+            <CollectPaymentPanel booking={booking} />
+            <dl className="mt-5 space-y-2 border-t border-hairline pt-4 text-sm">
               <Row
-                label="Amount paid"
-                value={formatINR(booking.amountPaid)}
+                label="Plan"
+                value={
+                  booking.paymentPlan === "deposit"
+                    ? "50% deposit"
+                    : booking.paymentPlan === "full"
+                      ? "Paid in full"
+                      : "—"
+                }
               />
               {booking.originalAmount !== undefined &&
                 booking.originalAmount !== booking.amount && (
@@ -106,16 +135,6 @@ export default async function BookingDetailPage({
                   value={`− ${formatINR(booking.discount)}`}
                 />
               )}
-              <Row
-                label="Method"
-                value={
-                  booking.paymentMethod
-                    ? booking.paymentMethod.toUpperCase()
-                    : isOnline
-                      ? "RAZORPAY"
-                      : "—"
-                }
-              />
               <Row label="Source" value={booking.source} className="capitalize" />
               {booking.razorpayOrderId && (
                 <Row
@@ -179,6 +198,28 @@ export default async function BookingDetailPage({
                 />
               )}
               <Row label="Booking ID" value={booking.id} mono />
+            </dl>
+          </Panel>
+
+          <Panel title="Entry" icon={<ScanLine className="h-4 w-4" />}>
+            <dl className="space-y-2 text-sm">
+              <Row
+                label="Door status"
+                value={ENTRY_LABEL[booking.checkInStatus ?? "awaiting"]}
+              />
+              {booking.checkInStatus === "admitted" && booking.checkedInAt && (
+                <Row label="Admitted" value={format(booking.checkedInAt, "PPp")} />
+              )}
+              {booking.checkInStatus === "rejected" &&
+                booking.checkInRejectedAt && (
+                  <Row
+                    label="Rejected"
+                    value={format(booking.checkInRejectedAt, "PPp")}
+                  />
+                )}
+              {booking.checkInNote && (
+                <Row label="Door note" value={booking.checkInNote} />
+              )}
             </dl>
           </Panel>
         </aside>

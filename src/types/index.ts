@@ -22,6 +22,36 @@ export type BookingPaymentMethod =
   | "card"
   | "bank";
 
+/** Whether the customer chose to pay the whole bill or just the 50% deposit. */
+export type PaymentPlan = "full" | "deposit";
+
+/** Where a payment was collected: through the online gateway or in person. */
+export type PaymentChannel = "online" | "venue";
+
+/** Which part of the bill a payment covers. */
+export type PaymentKind = "deposit" | "balance" | "full";
+
+/**
+ * One entry in a booking's payment ledger. Every rupee received — the online
+ * deposit/full capture and every cash/UPI collection at the door — is recorded
+ * as its own `BookingPayment`. `Booking.amountPaid` is the cached sum of these,
+ * and UPI vs cash balances are derived by summing entries per `method`.
+ */
+export type BookingPayment = {
+  /** Unique id within the booking. */
+  id: string;
+  /** Rupees received (> 0). */
+  amount: number;
+  method: BookingPaymentMethod;
+  channel: PaymentChannel;
+  kind: PaymentKind;
+  /** When the payment was received (epoch ms). */
+  at: number;
+  note?: string;
+  /** Razorpay payment id when collected through the gateway. */
+  razorpayPaymentId?: string;
+};
+
 /**
  * Selected add-on on a booking. `kind` distinguishes whether the user picked
  * an à la carte item or a package. `quantity` is 1 for packages and for
@@ -33,6 +63,10 @@ export type BookingAddonSelection = {
   name: string;
   unitPrice: number;
   quantity: number;
+  /** Snapshot: this selection is an experience package (e.g. "Celebration").
+   * Absent ⇒ a plain Movie booking / à la carte selection. Snapshotted so old
+   * bookings stay self-describing even if the catalog changes. */
+  experience?: boolean;
 };
 
 export type Booking = {
@@ -62,11 +96,21 @@ export type Booking = {
     selections?: BookingAddonSelection[];
   };
   amount: number;
+  /** Cached sum of `payments` (rupees received so far). `amount - amountPaid`
+   * is the balance still due at the venue. */
   amountPaid: number;
   originalAmount?: number;
   discount?: number;
+  /** Plan chosen at booking: pay in full or 50% deposit. Absent on legacy
+   * bookings (treat as "full"). */
+  paymentPlan?: PaymentPlan;
+  /** The payment ledger — every payment received against this booking. Absent
+   * on legacy bookings; `effectivePayments()` bridges those from `amountPaid`. */
+  payments?: BookingPayment[];
   status: BookingStatus;
   source: BookingSource;
+  /** The most recent tender used. Kept for back-compat / quick display; the
+   * `payments` ledger is authoritative for per-method totals. */
   paymentMethod?: BookingPaymentMethod;
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
@@ -74,9 +118,27 @@ export type Booking = {
   refundedAt?: number;
   cancelledAt?: number;
   notes?: string;
+  /** When the booking-confirmation email was sent (epoch ms). Set once on the
+   * first successful send; guards against double-sending on edits/retries. */
+  confirmationEmailSentAt?: number;
+  /**
+   * Venue entry / check-in state, set by an admin via the QR check-in flow.
+   * Independent of `status` (which tracks the booking lifecycle). Undefined ⇒
+   * "awaiting" (the guest hasn't been processed at the door yet).
+   */
+  checkInStatus?: CheckInStatus;
+  /** When the guest was admitted (epoch ms). */
+  checkedInAt?: number;
+  /** When entry was rejected (epoch ms). */
+  checkInRejectedAt?: number;
+  /** Optional admin note recorded at admit/reject time. */
+  checkInNote?: string;
   createdAt: number;
   updatedAt: number;
 };
+
+/** Venue entry decision for a booking's QR pass. */
+export type CheckInStatus = "awaiting" | "admitted" | "rejected";
 
 /**
  * À la carte add-on offered at booking time. Anything an admin can list as
@@ -92,6 +154,9 @@ export type AddonItem = {
   imageUrl?: string;
   /** Max units per booking. 1 → checkbox; >1 → +/- stepper. */
   maxQuantity: number;
+  /** Screens this item is offered on. Empty/absent ⇒ all screens.
+   * (e.g. Rose petals → ["forest"] — jungle room only.) */
+  screenIds?: ScreenId[];
   /** Inactive items don't show on the booking form but stay in Firestore. */
   active: boolean;
   /** Sort order on the customer form (lower = first). */
@@ -116,6 +181,13 @@ export type AddonPackage = {
   imageUrl?: string;
   kind: "bundle" | "standalone";
   itemIds: string[];
+  /** Experience package (e.g. "Celebration"): shown in the booking form's
+   * "Choose your experience" selector as an alternative to the plain Movie
+   * experience. Selecting it blocks à la carte items — they're included. */
+  includesAddons?: boolean;
+  /** Per-screen price override. Effective price for a booking is
+   * `priceByScreen[screenId] ?? price` (e.g. Celebration costs more on forest). */
+  priceByScreen?: Partial<Record<ScreenId, number>>;
   active: boolean;
   sortOrder: number;
   /** Highlight this package on the customer form. */

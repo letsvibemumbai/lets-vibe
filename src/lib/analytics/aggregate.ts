@@ -9,8 +9,16 @@ import {
 import { getBookingsInRange } from "@/lib/db/bookings.server";
 import { getExpensesInRange } from "@/lib/db/expenses.server";
 import { SCREEN_IDS } from "@/lib/booking/constants";
+import {
+  PAYMENT_METHODS,
+  PAYMENT_METHOD_LABEL,
+  collectedByMethod as bookingCollectedByMethod,
+  emptyMethodTotals,
+  totalCollected as bookingTotalCollected,
+} from "@/lib/booking/payments";
 import type {
   Booking,
+  BookingPaymentMethod,
   BookingSource,
   Duration,
   Expense,
@@ -30,8 +38,14 @@ export const EXPENSE_CATEGORIES: readonly ExpenseCategory[] = [
 
 export type Bucket<K extends string> = { key: K; label: string; value: number };
 
+// Billed revenue (accrual): the full value of a confirmed/completed booking,
+// regardless of how much has been collected. For all legacy data this equals
+// the old `amountPaid || amount` (amountPaid was always 0 or full), so existing
+// totals are unchanged; for new 50%-deposit bookings it correctly counts the
+// whole bill rather than just the deposit. "Collected" (below) tracks the cash
+// actually in hand, split by tender.
 function revenueOf(b: Booking): number {
-  return b.amountPaid || b.amount;
+  return b.amount;
 }
 
 function isRevenue(b: Booking): boolean {
@@ -113,6 +127,59 @@ function bucketsForCategories(
     label: CATEGORY_LABEL[c],
     value: totals[c],
   }));
+}
+
+// Collected cash, split by tender (UPI / Cash / Online / Card / Bank). Counts
+// only revenue-status bookings (confirmed/completed), so refunded-cancelled
+// money is excluded — consistent with the rest of the P&L.
+function bucketsForMethods(
+  bookings: Booking[],
+): Bucket<BookingPaymentMethod>[] {
+  const totals = emptyMethodTotals();
+  for (const b of bookings) {
+    if (!isRevenue(b)) continue;
+    const m = bookingCollectedByMethod(b);
+    for (const k of PAYMENT_METHODS) totals[k] += m[k];
+  }
+  return PAYMENT_METHODS.map((k) => ({
+    key: k,
+    label: PAYMENT_METHOD_LABEL[k],
+    value: totals[k],
+  }));
+}
+
+export type CollectionSummary = {
+  /** Per-tender collected totals, in canonical order. */
+  byMethod: Bucket<BookingPaymentMethod>[];
+  /** Total cash actually collected across all tenders. */
+  totalCollected: number;
+  /** Billed revenue (full value of confirmed/completed bookings). */
+  billedRevenue: number;
+  /** Still owed: billed − collected (never negative). */
+  outstanding: number;
+};
+
+export async function getCollectionSummary(
+  start: string,
+  end: string,
+): Promise<CollectionSummary> {
+  const bookings = await getBookingsInRange(start, end);
+  return collectionSummaryFor(bookings);
+}
+
+function collectionSummaryFor(bookings: Booking[]): CollectionSummary {
+  const revenueBookings = bookings.filter(isRevenue);
+  const totalCollected = revenueBookings.reduce(
+    (s, b) => s + bookingTotalCollected(b),
+    0,
+  );
+  const billedRevenue = revenueBookings.reduce((s, b) => s + revenueOf(b), 0);
+  return {
+    byMethod: bucketsForMethods(bookings),
+    totalCollected,
+    billedRevenue,
+    outstanding: Math.max(0, billedRevenue - totalCollected),
+  };
 }
 
 export async function getRevenueByScreen(
@@ -204,10 +271,13 @@ export type MonthlyReport = {
     net: number;
     bookingCount: number;
     expenseCount: number;
+    collected: number;
+    outstanding: number;
   };
   revenueByScreen: Bucket<ScreenId>[];
   revenueBySource: Bucket<BookingSource>[];
   revenueByDuration: Bucket<string>[];
+  collectedByMethod: Bucket<BookingPaymentMethod>[];
   expensesByCategory: Bucket<ExpenseCategory>[];
   daily: DailyTotals[];
   bookings: Booking[];
@@ -228,6 +298,7 @@ export async function getMonthlyReport(
     .filter(isRevenue)
     .reduce((sum, b) => sum + revenueOf(b), 0);
   const expenseTotal = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const collection = collectionSummaryFor(bookings);
 
   return {
     year,
@@ -240,10 +311,13 @@ export async function getMonthlyReport(
       net: revenue - expenseTotal,
       bookingCount: bookings.filter(isRevenue).length,
       expenseCount: expenses.length,
+      collected: collection.totalCollected,
+      outstanding: collection.outstanding,
     },
     revenueByScreen: bucketsForScreens(bookings),
     revenueBySource: bucketsForSources(bookings),
     revenueByDuration: bucketsForDurations(bookings),
+    collectedByMethod: collection.byMethod,
     expensesByCategory: bucketsForCategories(expenses),
     daily: dailyTotalsFor(start, end, bookings, expenses),
     bookings: bookings

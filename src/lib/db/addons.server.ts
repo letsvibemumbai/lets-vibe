@@ -46,10 +46,13 @@ export async function updateAddonItem(
   id: string,
   data: Partial<Omit<AddonItem, "id" | "createdAt">>,
 ): Promise<void> {
+  // `update` (not set-merge): the admin form submits complete payloads, and
+  // update's replace-named-fields semantics make arrays like `screenIds`
+  // replace wholesale instead of merging.
   await adminDb
     .collection(ITEMS)
     .doc(id)
-    .set({ ...data, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    .update({ ...data, updatedAt: FieldValue.serverTimestamp() });
 }
 
 export async function deleteAddonItem(id: string): Promise<void> {
@@ -89,10 +92,13 @@ export async function updateAddonPackage(
   id: string,
   data: Partial<Omit<AddonPackage, "id" | "createdAt">>,
 ): Promise<void> {
+  // `update` (not set-merge): set-merge DEEP-merges map fields, so a cleared
+  // `priceByScreen` override could never be removed. The admin form submits
+  // complete payloads, so replacing named fields wholesale is correct.
   await adminDb
     .collection(PACKAGES)
     .doc(id)
-    .set({ ...data, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    .update({ ...data, updatedAt: FieldValue.serverTimestamp() });
 }
 
 export async function deleteAddonPackage(id: string): Promise<void> {

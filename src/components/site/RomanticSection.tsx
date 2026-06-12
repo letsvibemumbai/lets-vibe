@@ -7,7 +7,7 @@ import { QuietButton } from "@/components/editorial";
 import { photoUrl } from "@/lib/photos";
 
 /**
- * Full-bleed romantic counterpoint between the main grid sections. Photo
+ * Full-bleed Celebration counterpoint between the main grid sections. Photo
  * lifts gently as the user scrolls. Centered, single italic display line,
  * one quiet CTA.
  */
@@ -53,7 +53,7 @@ export function RomanticSection() {
 
       <div className="relative mx-auto flex max-w-3xl flex-col items-center gap-9 px-6 text-center sm:px-8">
         <span className="text-[10px] uppercase tracking-[0.32em] text-accent">
-          An add-on, by request
+          The Celebration
         </span>
 
         <h2
@@ -64,13 +64,14 @@ export function RomanticSection() {
         </h2>
 
         <p className="max-w-xl text-[15px] leading-[1.7] text-ink/75">
-          Date nights, anniversaries, and the random Tuesday you want to feel
-          something. We hold the space — you bring the people.
+          Date nights, anniversaries, and the random Tuesday worth dressing
+          up. We set the room — cake, balloons, lights, fog — you take the
+          credit.
         </p>
 
         <div className="pt-3">
-          <QuietButton href="/book/grass" variant="ghost-inverse" size="lg">
-            Add the romantic setup
+          <QuietButton href="/book" variant="ghost-inverse" size="lg">
+            Plan the Celebration
           </QuietButton>
         </div>
       </div>

@@ -12,6 +12,8 @@ import {
 import { useAuthUser } from "@/lib/auth/useAuthUser";
 import { signInWithGoogle, signOut } from "@/lib/firebase/auth";
 import { SCREEN_PRESETS, isScreenId } from "@/lib/booking/constants";
+import { balanceDue } from "@/lib/booking/payments";
+import { getScreens as getScreensClient } from "@/lib/db/screens.client";
 import {
   getMembershipConfigAction,
   getMyBookingsAction,
@@ -27,10 +29,6 @@ const STATUS_LABEL: Record<Booking["status"], string> = {
   completed: "Completed",
 };
 
-function screenName(id: string): string {
-  return isScreenId(id) ? SCREEN_PRESETS[id].name : id;
-}
-
 function prettyDate(d: string): string {
   try {
     return format(new Date(`${d}T00:00:00`), "EEE, d MMM yyyy");
@@ -44,6 +42,9 @@ export function AccountClient() {
   const [bookings, setBookings] = React.useState<Booking[] | null>(null);
   const [membership, setMembership] = React.useState<Membership | null>(null);
   const [config, setConfig] = React.useState<MembershipConfig | null>(null);
+  const [screenNames, setScreenNames] = React.useState<Record<string, string>>(
+    {},
+  );
   const [dataLoading, setDataLoading] = React.useState(false);
   const [joining, startJoin] = React.useTransition();
   const [signingIn, setSigningIn] = React.useState(false);
@@ -52,14 +53,16 @@ export function AccountClient() {
   const refresh = React.useCallback(async (id: string) => {
     setDataLoading(true);
     try {
-      const [b, m, c] = await Promise.all([
+      const [b, m, c, screens] = await Promise.all([
         getMyBookingsAction(id),
         getMyMembershipAction(id),
         getMembershipConfigAction(),
+        getScreensClient().catch(() => []),
       ]);
       setBookings(b);
       setMembership(m);
       setConfig(c);
+      setScreenNames(Object.fromEntries(screens.map((s) => [s.id, s.name])));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Couldn't load your account");
     } finally {
@@ -72,7 +75,11 @@ export function AccountClient() {
   }, [uid, refresh]);
 
   async function handleSignIn() {
+    if (signingIn) return;
     setSigningIn(true);
+    // Safety net for COOP-blocked popup-close detection (see AuthGateClient):
+    // never leave the button stuck if the popup hangs.
+    const safety = window.setTimeout(() => setSigningIn(false), 60_000);
     try {
       await signInWithGoogle();
     } catch (err) {
@@ -84,6 +91,7 @@ export function AccountClient() {
         toast.error(err instanceof Error ? err.message : "Sign-in failed");
       }
     } finally {
+      window.clearTimeout(safety);
       setSigningIn(false);
     }
   }
@@ -152,6 +160,8 @@ export function AccountClient() {
   }
 
   const firstName = (user.displayName ?? "there").split(" ")[0];
+  const screenName = (id: string): string =>
+    screenNames[id] ?? (isScreenId(id) ? SCREEN_PRESETS[id].name : id);
 
   return (
     <div className="space-y-16">
@@ -216,6 +226,11 @@ export function AccountClient() {
                   <p className="font-display text-lg text-ink" style={{ fontWeight: 400 }}>
                     ₹{b.amount.toLocaleString("en-IN")}
                   </p>
+                  {b.status !== "cancelled" && balanceDue(b) > 0 ? (
+                    <p className="text-[12px] text-muted">
+                      ₹{balanceDue(b).toLocaleString("en-IN")} due at venue
+                    </p>
+                  ) : null}
                   {b.discount ? (
                     <p className="text-[12px] text-accent">
                       Member saved ₹{b.discount.toLocaleString("en-IN")}

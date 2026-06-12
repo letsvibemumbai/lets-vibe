@@ -10,7 +10,13 @@ import {
   SectionLabel,
 } from "@/components/editorial";
 import { getScreen } from "@/lib/db/screens.server";
+import { listAddonItems, listAddonPackages } from "@/lib/db/addons.server";
 import { isScreenId, SCREEN_GRADIENTS } from "@/lib/booking/constants";
+import {
+  effectivePackagePrice,
+  itemAvailableOnScreen,
+} from "@/lib/booking/addons";
+import { selectCelebrationPackage } from "@/lib/experiences";
 import { formatINR } from "@/components/admin/dashboard/utils";
 
 export const dynamic = "force-dynamic";
@@ -45,6 +51,17 @@ export default async function PublicScreenPage({
   if (!isScreenId(id)) notFound();
   const screen = await getScreen(id);
   if (!screen) notFound();
+
+  // .catch(() => []) so a catalogue hiccup never 500s the page — the
+  // Celebration / add-on rows simply drop out.
+  const [addonItems, addonPackages] = await Promise.all([
+    listAddonItems({ activeOnly: true }).catch(() => []),
+    listAddonPackages({ activeOnly: true }).catch(() => []),
+  ]);
+  const celebration = selectCelebrationPackage(addonPackages);
+  const screenAddons = addonItems.filter((item) =>
+    itemAvailableOnScreen(item, screen.id),
+  );
 
   return (
     <PublicShell>
@@ -102,6 +119,20 @@ export default async function PublicScreenPage({
                       label="Blocked days"
                       value={`${screen.blockedDates?.length ?? 0}`}
                     />
+                    {celebration && (
+                      <Stat
+                        label="Celebration"
+                        value={`+${formatINR(
+                          effectivePackagePrice(celebration, screen.id),
+                        )} — decorations included`}
+                      />
+                    )}
+                    {screenAddons.length > 0 && (
+                      <Stat
+                        label="Add-ons"
+                        value={screenAddons.map((i) => i.name).join(" · ")}
+                      />
+                    )}
                   </dl>
 
                   <div className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-3">

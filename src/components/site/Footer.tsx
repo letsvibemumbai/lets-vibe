@@ -83,7 +83,7 @@ export function Footer() {
               </p>
               <p className="mt-5 max-w-sm text-[14px] leading-[1.65] text-muted">
                 Three private themed screens in Mumbai. Bring your film — the
-                rest of the evening is yours, just the two of you.
+                rest of the evening is yours.
               </p>
             </div>
 

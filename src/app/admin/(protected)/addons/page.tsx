@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { PackagePlus, Plus, Sparkles } from "lucide-react";
 import { listAddonItems, listAddonPackages } from "@/lib/db/addons.server";
+import { SCREEN_IDS } from "@/lib/booking/constants";
+import { SCREEN_LABEL } from "@/components/admin/dashboard/utils";
 import type { AddonItem, AddonPackage } from "@/types";
 
 export const metadata = { title: "Add-ons · Let's Vibe Admin" };
@@ -118,6 +120,11 @@ function ItemRow({ item }: { item: AddonItem }) {
                 {item.category}
               </span>
             )}
+            {!!item.screenIds?.length && (
+              <span className="rounded-full bg-cream-dark px-2 py-0.5 text-[10px] uppercase tracking-wider text-foreground/55">
+                {item.screenIds.map((id) => SCREEN_LABEL[id]).join(" · ")} only
+              </span>
+            )}
           </div>
           {item.description && (
             <p className="mt-0.5 line-clamp-1 text-xs text-foreground/55">
@@ -150,6 +157,10 @@ function PackageRow({
           .filter(Boolean)
           .join(" · ")
       : "Standalone offer";
+  const priceOverrides = SCREEN_IDS.flatMap((id) => {
+    const value = pkg.priceByScreen?.[id];
+    return typeof value === "number" ? [{ id, value }] : [];
+  });
 
   return (
     <li>
@@ -168,6 +179,11 @@ function PackageRow({
                   featured
                 </span>
               )}
+              {pkg.includesAddons && (
+                <span className="rounded-full bg-foreground px-2 py-0.5 text-[10px] uppercase tracking-wider text-cream">
+                  experience
+                </span>
+              )}
               {!pkg.active && (
                 <span className="rounded-full bg-foreground/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-foreground/55">
                   inactive
@@ -178,8 +194,15 @@ function PackageRow({
               {pkg.kind}
             </p>
           </div>
-          <div className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
+          <div className="shrink-0 text-right text-sm font-semibold tabular-nums text-foreground">
             ₹{pkg.price.toLocaleString("en-IN")}
+            {priceOverrides.length > 0 && (
+              <span className="font-normal text-foreground/55">
+                {priceOverrides
+                  .map((o) => ` · ${o.id} ₹${o.value.toLocaleString("en-IN")}`)
+                  .join("")}
+              </span>
+            )}
           </div>
         </div>
         {pkg.description && (

@@ -109,14 +109,17 @@ export function Hero() {
 
             <div className="flex flex-col gap-7 lg:col-span-4">
               <p className="max-w-md text-[15px] leading-[1.7] text-ink/80">
-                Three intimate screens. Your film of choice. The rest, we
-                handle — projection, sound, ambience, and a quiet handover.
+                Three intimate screens. Your film of choice. Movie night or
+                full Celebration — the room is set before you walk in.
               </p>
 
-              <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+              <div className="flex flex-col items-start gap-4 sm:flex-row sm:flex-wrap sm:items-center">
                 <TicketButton href="/book" size="lg">
                   Reserve a screen
                 </TicketButton>
+                <QuietButton href="/#screens" variant="ghost-inverse" size="lg">
+                  Explore the rooms
+                </QuietButton>
                 <QuietButton href="/#booking" variant="link" size="md">
                   How it works
                 </QuietButton>

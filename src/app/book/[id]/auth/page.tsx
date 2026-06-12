@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
 import { Stepper } from "@/components/booking/Stepper";
 import { AuthGateClient } from "@/components/booking/AuthGateClient";
-import { SCREEN_PRESETS, isScreenId } from "@/lib/booking/constants";
+import { isScreenId } from "@/lib/booking/constants";
+import { getScreenResolved } from "@/lib/db/screens.server";
 import { DisplayHeading, SectionLabel } from "@/components/editorial";
 
 export const metadata = { title: "Continue · Let's Vibe" };
+export const dynamic = "force-dynamic";
 
 export default async function BookingAuthPage({
   params,
@@ -13,7 +15,7 @@ export default async function BookingAuthPage({
 }) {
   const { id } = await params;
   if (!isScreenId(id)) redirect("/book");
-  const screen = SCREEN_PRESETS[id];
+  const screen = await getScreenResolved(id);
 
   return (
     <>

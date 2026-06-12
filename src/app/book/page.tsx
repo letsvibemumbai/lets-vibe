@@ -1,14 +1,17 @@
 import { Stepper } from "@/components/booking/Stepper";
 import { BookScreenCard } from "@/components/booking/BookScreenCard";
 import { AvailabilityChecker } from "@/components/booking/AvailabilityChecker";
-import { SCREEN_IDS, SCREEN_PRESETS } from "@/lib/booking/constants";
+import { screenImageUrl } from "@/lib/booking/constants";
+import { getScreensResolved } from "@/lib/db/screens.server";
 import { DisplayHeading, SectionLabel } from "@/components/editorial";
 
 export const metadata = {
   title: "Choose a room · Let's Vibe",
 };
+export const dynamic = "force-dynamic";
 
-export default function BookStartPage() {
+export default async function BookStartPage() {
+  const screens = await getScreensResolved();
   return (
     <>
       <Stepper current={1} />
@@ -31,19 +34,16 @@ export default function BookStartPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {SCREEN_IDS.map((id) => {
-          const screen = SCREEN_PRESETS[id];
-          return (
-            <BookScreenCard
-              key={id}
-              theme={id}
-              name={screen.name}
-              startingPrice={screen.basePrices["1h"]}
-              href={`/book/${id}`}
-              romanticBadge={id === "grass"}
-            />
-          );
-        })}
+        {screens.map((screen) => (
+          <BookScreenCard
+            key={screen.id}
+            theme={screen.id}
+            name={screen.name}
+            startingPrice={screen.basePrices["1h"]}
+            imageUrl={screenImageUrl(screen, 1000)}
+            href={`/book/${screen.id}`}
+          />
+        ))}
       </div>
     </>
   );

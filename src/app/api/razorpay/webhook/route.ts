@@ -2,7 +2,8 @@ import crypto from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
-import type { Booking } from "@/types";
+import { onlinePortion } from "@/lib/booking/payments";
+import type { Booking, BookingPayment } from "@/types";
 
 export const runtime = "nodejs";
 
@@ -90,9 +91,32 @@ export async function POST(req: NextRequest) {
     });
   }
 
+  // Record the captured amount as an online ledger entry. Prefer the actual
+  // captured amount from Razorpay (paise → rupees); fall back to the plan's
+  // expected online portion if the event omitted it.
+  const plan = booking.paymentPlan ?? "full";
+  const captured =
+    typeof payment.amount === "number" && payment.amount > 0
+      ? Math.round(payment.amount / 100)
+      : onlinePortion(booking.amount, plan);
+  const existing = booking.payments ?? [];
+  const onlinePayment: BookingPayment = {
+    id: crypto.randomUUID(),
+    amount: captured,
+    method: "razorpay",
+    channel: "online",
+    kind: plan === "deposit" ? "deposit" : "full",
+    at: Date.now(),
+    razorpayPaymentId: payment.id,
+  };
+  const payments = [...existing, onlinePayment];
+  const amountPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+
   await doc.ref.update({
     status: "confirmed",
-    amountPaid: booking.amount,
+    amountPaid,
+    payments,
+    paymentMethod: "razorpay",
     razorpayPaymentId: payment.id,
     updatedAt: FieldValue.serverTimestamp(),
   });
