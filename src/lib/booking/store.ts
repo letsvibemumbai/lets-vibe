@@ -36,6 +36,12 @@ type BookingDraft = {
   amount?: number;
   /** Pay-in-full vs 50% deposit. Defaults to full until the customer chooses. */
   paymentPlan: PaymentPlan;
+  /** Firebase Storage path of an already-uploaded UPI payment screenshot.
+   * Persisted so if `submitUpiBooking` fails with SLOT_UNAVAILABLE the user
+   * doesn't have to re-pay and re-upload — they just pick a new slot and the
+   * existing proof is reused. Cleared on successful booking or explicit
+   * `reset()`. */
+  paymentScreenshotPath?: string;
 };
 
 type BookingActions = {
@@ -45,6 +51,7 @@ type BookingActions = {
   setAddOns: (addOns: AddOns) => void;
   setAmount: (amount: number) => void;
   setPaymentPlan: (plan: PaymentPlan) => void;
+  setPaymentScreenshotPath: (path: string | undefined) => void;
   reset: () => void;
 };
 
@@ -58,6 +65,7 @@ const initial: BookingDraft = {
   addOns: {},
   amount: undefined,
   paymentPlan: "full",
+  paymentScreenshotPath: undefined,
 };
 
 export const useBookingStore = create<BookingDraft & BookingActions>()(
@@ -79,6 +87,8 @@ export const useBookingStore = create<BookingDraft & BookingActions>()(
       setAddOns: (addOns) => set({ addOns }),
       setAmount: (amount) => set({ amount }),
       setPaymentPlan: (paymentPlan) => set({ paymentPlan }),
+      setPaymentScreenshotPath: (paymentScreenshotPath) =>
+        set({ paymentScreenshotPath }),
       reset: () => set(initial),
     }),
     {

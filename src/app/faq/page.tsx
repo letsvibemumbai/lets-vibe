@@ -7,11 +7,11 @@ import { PublicShell } from "@/components/site/PublicShell";
 import { DisplayHeading, SectionLabel } from "@/components/editorial";
 
 export const metadata: Metadata = {
-  title: "Journal · Let's Vibe",
+  title: "FAQ",
   description:
     "Everything to know before booking a private screen at Let's Vibe.",
   openGraph: {
-    title: "Journal · Let's Vibe",
+    title: "FAQ · Let's Vibe",
     description: "Common questions about booking, screens, add-ons, payments.",
   },
 };

@@ -105,3 +105,55 @@ export function collectedByMethod(
 export function sumPayments(payments: BookingPayment[]): number {
   return payments.reduce((sum, p) => sum + p.amount, 0);
 }
+
+/**
+ * Compute the payment ledger after an admin verifies a UPI booking's screenshot.
+ * Records the online portion (the full bill, or the 50% deposit if that plan was
+ * chosen) as a UPI payment on top of any existing entries, and returns the new
+ * ledger + cached `amountPaid`. Pure — the caller supplies the new entry's id +
+ * timestamp so the result is deterministic and unit-testable. No amount is
+ * computed from a rate: `captured` is sliced straight from the booking total.
+ */
+export function applyUpiConfirmation(
+  booking: Booking,
+  entry: { id: string; at: number },
+): { payments: BookingPayment[]; amountPaid: number; captured: number } {
+  const plan = booking.paymentPlan ?? "full";
+  const captured = onlinePortion(booking.amount, plan);
+  const existing = effectivePayments(booking);
+  const payment: BookingPayment = {
+    id: entry.id,
+    amount: captured,
+    method: "upi",
+    channel: "online",
+    kind: plan === "deposit" ? "deposit" : "full",
+    at: entry.at,
+    note: "UPI payment verified from uploaded screenshot",
+  };
+  const payments = [...existing, payment];
+  return { payments, amountPaid: sumPayments(payments), captured };
+}
+
+/**
+ * Build a UPI deep-link (`upi://pay?…`) so a customer on a phone can tap to open
+ * GPay/PhonePe/Paytm with the payee + amount pre-filled. Returns `null` when no
+ * VPA is configured (we then fall back to the scan-only static QR image).
+ * This only constructs a link — no money is computed; `amount` is passed
+ * straight through from the bill.
+ */
+export function buildUpiUri(args: {
+  vpa?: string;
+  payeeName?: string;
+  amount?: number;
+  note?: string;
+}): string | null {
+  const vpa = args.vpa?.trim();
+  if (!vpa) return null;
+  const params = new URLSearchParams({ pa: vpa, cu: "INR" });
+  if (args.payeeName?.trim()) params.set("pn", args.payeeName.trim());
+  if (typeof args.amount === "number" && args.amount > 0) {
+    params.set("am", String(args.amount));
+  }
+  if (args.note?.trim()) params.set("tn", args.note.trim());
+  return `upi://pay?${params.toString()}`;
+}

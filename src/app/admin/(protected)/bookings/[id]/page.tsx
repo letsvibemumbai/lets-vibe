@@ -8,10 +8,12 @@ import {
   QrCode,
   Receipt,
   ScanLine,
+  ShieldCheck,
   User,
 } from "lucide-react";
 import { getBooking, timestampToMillis } from "@/lib/db/bookings.server";
 import { listAddonItems, listAddonPackages } from "@/lib/db/addons.server";
+import { signedReadUrl } from "@/lib/storage/upload";
 import {
   SCREEN_LABEL,
   formatINR,
@@ -20,6 +22,7 @@ import {
 import { StatusBadge } from "@/components/admin/dashboard/StatusBadge";
 import { BookingEditForm } from "@/components/admin/bookings/EditForm";
 import { CancelBookingButton } from "@/components/admin/bookings/CancelButton";
+import { ConfirmPaymentPanel } from "@/components/admin/bookings/ConfirmPaymentPanel";
 import { RefundButton } from "@/components/admin/bookings/RefundButton";
 import { CollectPaymentPanel } from "@/components/admin/payments/CollectPaymentPanel";
 import type { CheckInStatus } from "@/types";
@@ -56,6 +59,18 @@ export default async function BookingDetailPage({
     booking.amountPaid > 0;
   const canCancel =
     booking.status !== "cancelled" && booking.status !== "completed";
+  const hasScreenshot =
+    !!booking.paymentScreenshotPath || !!booking.paymentScreenshotUrl;
+  const showPaymentVerification =
+    hasScreenshot ||
+    booking.paymentStatus !== undefined ||
+    (isOnline && booking.status === "pending");
+  // Resolve the screenshot src server-side: prefer a short-lived signed URL
+  // off the private storage path; fall back to the legacy public URL for
+  // bookings created before the upload became private.
+  const screenshotSrc = booking.paymentScreenshotPath
+    ? await signedReadUrl(booking.paymentScreenshotPath)
+    : booking.paymentScreenshotUrl ?? null;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -100,6 +115,14 @@ export default async function BookingDetailPage({
 
       <div className="grid gap-6 lg:grid-cols-3">
         <section className="space-y-4 lg:col-span-2">
+          {showPaymentVerification && (
+            <Panel
+              title="Payment verification"
+              icon={<ShieldCheck className="h-4 w-4" />}
+            >
+              <ConfirmPaymentPanel booking={booking} screenshotSrc={screenshotSrc} />
+            </Panel>
+          )}
           <Panel title="Edit details" icon={<User className="h-4 w-4" />}>
             <BookingEditForm booking={booking} items={items} packages={packages} />
           </Panel>

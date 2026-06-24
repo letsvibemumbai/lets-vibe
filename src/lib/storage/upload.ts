@@ -15,6 +15,15 @@ const ALLOWED: Record<string, string> = {
 export type UploadOptions = {
   prefix: string; // folder, e.g. "expenses" or "screens"
   allow?: string[]; // optional content-type whitelist (subset of ALLOWED)
+  /**
+   * When `true` (default), the blob is made world-readable via `makePublic()`
+   * and the returned `url` works for any unauthenticated GET — appropriate for
+   * marketing assets (screen images, UPI QR). When `false`, the blob stays
+   * private and `url` is still returned for reference but won't resolve
+   * without a signed URL — use {@link signedReadUrl} server-side to mint one
+   * for an authorized viewer.
+   */
+  public?: boolean;
 };
 
 export type UploadResult =
@@ -47,11 +56,62 @@ export async function uploadPublicBlob(
   const id = crypto.randomBytes(12).toString("hex");
   const path = `${opts.prefix}/${id}.${ALLOWED[contentType]}`;
   const blob = adminBucket.file(path);
-  await blob.save(buffer, {
-    contentType,
-    metadata: { cacheControl: "public, max-age=31536000, immutable" },
-  });
-  await blob.makePublic();
+  const isPublic = opts.public !== false;
+
+  // Wrap the Storage write so a misconfigured bucket / disabled product /
+  // permission issue surfaces as a typed result with a useful message instead
+  // of becoming an unhandled exception that Next.js renders as a bare 500.
+  // The classic case: Firebase Storage has never been provisioned for the
+  // project — `blob.save()` then 404s with "The specified bucket does not
+  // exist." and the customer sees nothing helpful.
+  try {
+    await blob.save(buffer, {
+      contentType,
+      metadata: isPublic
+        ? { cacheControl: "public, max-age=31536000, immutable" }
+        : { cacheControl: "private, max-age=0, no-store" },
+    });
+    if (isPublic) await blob.makePublic();
+  } catch (err) {
+    const raw = err instanceof Error ? err.message : String(err);
+    console.error("[uploadPublicBlob] storage write failed:", raw);
+    const bucketMissing =
+      /bucket.*(does not exist|not found)/i.test(raw) ||
+      / 404\b/.test(raw);
+    return {
+      ok: false,
+      status: 502,
+      error: bucketMissing
+        ? "Storage isn't available right now. (The Firebase Storage bucket has not been provisioned — open Firebase Console → Storage → Get started.)"
+        : "Storage isn't available right now. Please try again in a moment.",
+    };
+  }
+
   const url = `https://storage.googleapis.com/${adminBucket.name}/${path}`;
   return { ok: true, url, path };
+}
+
+/**
+ * Mint a short-lived signed read URL for a private storage object. Server-only
+ * — only call from inside `requireAdmin()`-gated server components or admin
+ * route handlers. Default TTL 5 min. Returns `null` if the path doesn't exist
+ * so the caller can render a graceful fallback.
+ */
+export async function signedReadUrl(
+  path: string,
+  ttlMs = 5 * 60_000,
+): Promise<string | null> {
+  if (!path) return null;
+  try {
+    const file = adminBucket.file(path);
+    const [exists] = await file.exists();
+    if (!exists) return null;
+    const [url] = await file.getSignedUrl({
+      action: "read",
+      expires: Date.now() + ttlMs,
+    });
+    return url;
+  } catch {
+    return null;
+  }
 }

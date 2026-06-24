@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default function BookError({
+export default function RootError({
   error,
   reset,
 }: {
@@ -13,21 +13,21 @@ export default function BookError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[book]", error);
+    console.error("[root]", error);
   }, [error]);
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col items-center px-4 py-20 text-center">
+    <div className="mx-auto flex max-w-2xl flex-col items-center px-5 py-24 text-center">
       <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-700">
         <AlertTriangle className="h-6 w-6" />
       </div>
       <h1 className="mt-6 font-display text-3xl text-foreground">
-        Something went sideways
+        Something went wrong
       </h1>
-      <p className="mt-3 text-sm text-foreground/65">
-        We couldn&rsquo;t finish that step. Try again, or pick another screen.
-        If this keeps happening, our team can help — mention the reference
-        below when you reach out.
+      <p className="mt-3 max-w-md text-sm text-foreground/65">
+        We hit an unexpected error. Try again, or head back to the homepage.
+        If this keeps happening, mention the reference below when you reach
+        out — it helps us trace what went wrong.
       </p>
 
       {error.digest && (

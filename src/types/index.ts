@@ -104,6 +104,17 @@ export type Booking = {
   /** Plan chosen at booking: pay in full or 50% deposit. Absent on legacy
    * bookings (treat as "full"). */
   paymentPlan?: PaymentPlan;
+  /** Legacy: public URL of uploaded UPI payment screenshot. Newer bookings
+   * store the storage path in `paymentScreenshotPath` and resolve a signed URL
+   * server-side; this field is kept for back-compat with bookings created
+   * before the upload became private. */
+  paymentScreenshotUrl?: string;
+  /** Firebase Storage path (e.g. `payment-proofs/abc.jpg`) of the uploaded
+   * UPI payment screenshot. The blob is private — admins resolve a short-lived
+   * signed URL via `signedReadUrl(path)` in admin server pages. */
+  paymentScreenshotPath?: string;
+  /** Status of payment verification (pending until admin approves) */
+  paymentStatus?: "PENDING" | "CONFIRMED";
   /** The payment ledger — every payment received against this booking. Absent
    * on legacy bookings; `effectivePayments()` bridges those from `amountPaid`. */
   payments?: BookingPayment[];
@@ -258,6 +269,27 @@ export type Customer = {
   lastBookingDate?: string;
   lastSource?: BookingSource;
   createdAt: number;
+  updatedAt: number;
+};
+
+/**
+ * Manual UPI payment configuration. Stored as a single Firestore doc at
+ * `settings/payment` and edited from the admin Payments page. Read publicly
+ * (server-side) so the checkout page can render the "scan & pay" QR. We collect
+ * UPI payments out-of-band (the customer scans the QR, pays in their UPI app,
+ * and uploads a confirmation screenshot) — nothing here is ever computed; the
+ * admin verifies the screenshot and confirms the booking by hand.
+ */
+export type PaymentSettings = {
+  /** Public URL of the uploaded "scan & pay" QR image shown at checkout. */
+  upiQrUrl?: string;
+  /** UPI ID / VPA shown as copyable text and used to build a tap-to-pay link
+   * (e.g. "letsvibe@okhdfcbank"). Optional — the QR image alone is enough. */
+  upiId?: string;
+  /** Payee name shown in the customer's UPI app via the tap-to-pay link. */
+  payeeName?: string;
+  /** Optional free-text instruction shown under the QR at checkout. */
+  instructions?: string;
   updatedAt: number;
 };
 

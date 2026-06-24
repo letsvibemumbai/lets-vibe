@@ -3,9 +3,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Replace ADMIN_EMAIL_PLACEHOLDER at deploy time, or — preferred —
-    // set a custom claim `admin: true` on the admin user via the Admin
-    // SDK and change isAdmin() to: request.auth.token.admin == true.
+    // Admin gate. To rotate the admin OR add a second admin, switch to a
+    // custom claim: `admin.auth().setCustomUserClaims(uid, { admin: true })`
+    // and change isAdmin() to `request.auth.token.admin == true`.
     function isAdmin() {
       return request.auth != null
         && request.auth.token.email_verified == true
@@ -32,14 +32,18 @@ service cloud.firestore {
     }
 
     // ----- bookings -----
-    // - Admin: full access.
-    // - Public: may CREATE a pending online booking only (no payment IDs,
-    //   bounded fields), and may GET a single booking by ID (used by the
-    //   post-checkout confirmation screen). LIST is admin-only.
+    // Admin-only direct access. The customer-facing confirmation/status pages
+    // are server-rendered (Next.js admin SDK), so no client GET is required —
+    // a public `allow get` would leak PII (name, phone, email, payment
+    // screenshot URL) to anyone who obtains a booking ID via email, browser
+    // history, or shared screenshot.
+    //
+    // Public CREATE is permitted only for the tightly-shaped guest-checkout
+    // path: pending/online/zero-paid bookings with no Razorpay payment id, an
+    // exact key set, and per-field type/format/range constraints to prevent
+    // tampering or injection of admin-only fields.
     match /bookings/{bookingId} {
-      allow get: if true;
-      allow list: if isAdmin();
-      allow update, delete: if isAdmin();
+      allow get, list, update, delete: if isAdmin();
       allow create: if isAdmin() || (
         request.resource.data.status == 'pending'
         && request.resource.data.source == 'online'
@@ -50,6 +54,28 @@ service cloud.firestore {
           'customerName', 'customerPhone', 'guestCount',
           'amount', 'amountPaid', 'status', 'source'
         ])
+        // Type + range checks to harden against malformed / hostile writes.
+        // Server actions remain the canonical create path; rules are a
+        // belt-and-braces backstop for direct client-SDK writes.
+        && request.resource.data.screenId in ['beach', 'grass', 'forest']
+        && request.resource.data.date is string
+        && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && request.resource.data.startTime is string
+        && request.resource.data.startTime.matches('^[0-9]{2}:[0-9]{2}$')
+        && request.resource.data.endTime is string
+        && request.resource.data.endTime.matches('^[0-9]{2}:[0-9]{2}$')
+        && request.resource.data.duration in [1, 2, 3]
+        && request.resource.data.customerName is string
+        && request.resource.data.customerName.size() >= 2
+        && request.resource.data.customerName.size() <= 100
+        && request.resource.data.customerPhone is string
+        && request.resource.data.customerPhone.matches('^[6-9][0-9]{9}$')
+        && request.resource.data.guestCount is int
+        && request.resource.data.guestCount >= 1
+        && request.resource.data.guestCount <= 50
+        && request.resource.data.amount is number
+        && request.resource.data.amount >= 0
+        && request.resource.data.amount <= 1000000
       );
     }
 
@@ -87,6 +113,11 @@ service cloud.firestore {
         && request.resource.data.remainingDiscountedBookings == 0
       );
       allow update, delete: if isAdmin();
+    }
+
+    // Default deny: any collection not explicitly granted above is locked.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

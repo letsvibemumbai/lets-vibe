@@ -17,7 +17,7 @@ export const metadata = { title: "Booking status · Let's Vibe" };
 export const dynamic = "force-dynamic";
 
 const STATUS_LABEL: Record<BookingStatus, { label: string; tone: string }> = {
-  pending: { label: "Pending payment", tone: "text-accent" },
+  pending: { label: "Awaiting confirmation", tone: "text-accent" },
   confirmed: { label: "Confirmed", tone: "text-ink" },
   cancelled: { label: "Cancelled", tone: "text-muted line-through" },
   completed: { label: "Completed", tone: "text-muted" },
@@ -136,9 +136,10 @@ export default async function StatusPage({
         </div>
 
         {booking.status === "pending" ? (
-          <p className="mt-6 border-t border-hairline pt-5 text-[12px] uppercase tracking-[0.22em] text-muted">
-            Payment is being verified. This page updates automatically once
-            the gateway confirms.
+          <p className="mt-6 border-t border-hairline pt-5 text-[13px] leading-[1.7] text-muted">
+            {booking.paymentScreenshotPath || booking.paymentScreenshotUrl
+              ? "We've received your payment screenshot and our team is verifying it. You'll get a confirmation email once your booking is approved — refresh this page anytime to check."
+              : "Your booking is awaiting confirmation. You'll get a confirmation email once it's approved."}
           </p>
         ) : null}
       </div>

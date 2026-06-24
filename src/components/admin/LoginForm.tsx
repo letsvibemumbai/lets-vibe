@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ADMIN_EMAIL, sendAdminMagicLink } from "@/lib/firebase/auth";
+import { sendAdminMagicLink } from "@/lib/firebase/auth";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -67,7 +67,7 @@ export function LoginForm() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder={ADMIN_EMAIL || "you@example.com"}
+          placeholder="you@example.com"
         />
       </div>
       <Button

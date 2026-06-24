@@ -5,11 +5,13 @@ import {
   parseISO,
   startOfMonth,
 } from "date-fns";
-import { Banknote, CircleDollarSign, Smartphone } from "lucide-react";
+import { Banknote, CircleDollarSign, QrCode, Smartphone } from "lucide-react";
 import {
   listPaymentsLedger,
   type PaymentLedgerFilters,
 } from "@/lib/db/payments.server";
+import { getPaymentSettings } from "@/lib/db/payment-settings.server";
+import { PaymentQrSettings } from "@/components/admin/payments/PaymentQrSettings";
 import { PeriodPicker } from "@/components/admin/accounting/PeriodPicker";
 import { SCREEN_LABEL, formatINR } from "@/components/admin/dashboard/utils";
 import { PAYMENT_METHOD_LABEL } from "@/lib/booking/payments";
@@ -70,7 +72,10 @@ export default async function AdminPaymentsPage({
 }) {
   const sp = await searchParams;
   const { from, to, method } = parseFilters(sp);
-  const ledger = await listPaymentsLedger({ dateFrom: from, dateTo: to, method });
+  const [ledger, paymentSettings] = await Promise.all([
+    listPaymentsLedger({ dateFrom: from, dateTo: to, method }),
+    getPaymentSettings(),
+  ]);
   const periodLabel = `${format(parseISO(from), "d MMM yyyy")} → ${format(
     parseISO(to),
     "d MMM yyyy",
@@ -90,6 +95,21 @@ export default async function AdminPaymentsPage({
           Every payment received · {periodLabel}
         </p>
       </header>
+
+      <section className="rounded-3xl bg-card p-6 ring-1 ring-hairline">
+        <header className="mb-4 flex items-center gap-2 text-foreground/70">
+          <QrCode className="h-4 w-4" />
+          <h2 className="text-sm font-semibold uppercase tracking-wider">
+            Checkout payment QR
+          </h2>
+        </header>
+        <p className="mb-5 max-w-2xl text-sm text-foreground/55">
+          Customers scan this UPI QR at checkout, pay in their UPI app, and
+          upload a screenshot. Confirm each booking from its detail page once
+          you&rsquo;ve verified the payment.
+        </p>
+        <PaymentQrSettings settings={paymentSettings} />
+      </section>
 
       <PeriodPicker from={from} to={to} />
 

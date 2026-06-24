@@ -214,7 +214,17 @@ export function BookingsTable({ rows, filters }: Props) {
                     {formatINR(b.amount)}
                   </TableCell>
                   <TableCell>
-                    <StatusBadge status={b.status} />
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <StatusBadge status={b.status} />
+                      {b.paymentStatus === "PENDING" && (
+                        <span
+                          title="UPI payment screenshot awaiting verification"
+                          className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-500/25"
+                        >
+                          Verify
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-xs text-foreground/55 capitalize">
                     {b.source}

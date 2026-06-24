@@ -303,6 +303,11 @@ export function DetailsForm({ screen, items, packages }: Props) {
               <QuietButton type="submit" variant="primary" size="lg">
                 Continue to payment
               </QuietButton>
+              <p className="mt-3 text-center text-[11px] leading-[1.6] text-muted">
+                On the next step you can{" "}
+                <span className="text-ink">pay in full</span> or just{" "}
+                <span className="text-ink">50% now</span> &middot; the rest at the venue.
+              </p>
             </div>
           </div>
         </aside>

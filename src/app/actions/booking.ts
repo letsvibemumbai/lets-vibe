@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import { z } from "zod";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
+import { rateLimit, serverActionIp } from "@/lib/rate-limit";
 import { getScreen } from "@/lib/db/screens.server";
 import { razorpay } from "@/lib/razorpay/server";
 import { rupeesToPaise } from "@/lib/razorpay/util";
@@ -17,7 +18,7 @@ import {
 import { resolveSelectionsAgainstCatalog } from "@/lib/booking/addons";
 import { SCREEN_IDS, SCREEN_PRESETS } from "@/lib/booking/constants";
 import { onlinePortion } from "@/lib/booking/payments";
-import { calculateBookingPrice, applyMembershipDiscount } from "@/lib/slots/pricing";
+import { calculateBookingPrice } from "@/lib/slots/pricing";
 import {
   getAddonItem,
   getAddonPackage,
@@ -105,8 +106,6 @@ const CreateBookingSchema = z.object({
   /** Pay the whole bill online, or just the 50% deposit (rest at the venue). */
   paymentPlan: z.enum(["full", "deposit"]).default("full"),
 });
-
-const MEMBERSHIPS = "memberships";
 
 export type CreateBookingPayload = z.infer<typeof CreateBookingSchema>;
 
@@ -261,44 +260,64 @@ export async function createBookingAndOrder(
   };
 }
 
+const SubmitUpiSchema = CreateBookingSchema.extend({
+  /** Storage path of the uploaded UPI/GPay payment screenshot (from
+   * /api/book/payment-proof). The blob is private; admins view it via a
+   * short-lived signed URL minted server-side. Must start with the
+   * payment-proofs/ prefix and end with a known image extension. */
+  paymentScreenshotPath: z
+    .string()
+    .trim()
+    .regex(
+      /^payment-proofs\/[a-f0-9]{24}\.(jpg|png|webp)$/,
+      "Invalid screenshot path",
+    ),
+});
+
+export type SubmitUpiBookingPayload = z.infer<typeof SubmitUpiSchema>;
+
 /**
- * TEMPORARY — Razorpay bypass. Creates the booking and confirms it in a single
- * step, skipping the payment gateway entirely. Same validation, slot guard, and
- * server-authoritative pricing as `createBookingAndOrder`, but no Razorpay order
- * is created and no signature is verified. `amountPaid` is left at 0 (no money
- * was actually collected) and a note records the bypass so admin/accounting
- * stays honest. Re-enable the real gateway by routing PaymentClient back to
- * `createBookingAndOrder` + `verifyPayment`.
+ * Manual-UPI checkout. The customer scanned the venue's "scan & pay" QR, paid
+ * in their own UPI app, and uploaded a confirmation screenshot. We reserve the
+ * slot and file a PENDING booking with the screenshot attached — no money is
+ * recorded yet (`amountPaid` stays 0) and the booking stays `pending` until an
+ * admin eyeballs the screenshot and confirms it. The amount stored is the same
+ * server-recomputed bill the customer saw at checkout (no membership discount is
+ * applied on this path, so what they scanned is exactly what they paid).
  */
-export async function confirmBookingDirect(
-  rawPayload: CreateBookingPayload,
-): Promise<{ bookingId: string; amount: number; discount: number }> {
-  const payload = CreateBookingSchema.parse(rawPayload);
+export async function submitUpiBooking(
+  rawPayload: SubmitUpiBookingPayload,
+): Promise<{ bookingId: string; amount: number }> {
+  // Per-IP rate-limit before any work: 4 attempts / minute, burst 4. Real
+  // customers never hit this; sprayers do.
+  const ip = await serverActionIp();
+  const rl = rateLimit(`submitUpi:${ip}`, { capacity: 4, refillPerSec: 0.067 });
+  if (!rl.ok) {
+    throw new Error(
+      "Too many booking attempts — please wait a moment and try again.",
+    );
+  }
+
+  const payload = SubmitUpiSchema.parse(rawPayload);
   const screen = await fetchScreenOrThrow(payload.screenId);
 
   const resolvedSelections = await resolveSelections(
     payload.addOns.selections ?? [],
     payload.screenId,
   );
-  const grossAmount = calculateBookingPrice(screen, payload.duration, {
+  const amount = calculateBookingPrice(screen, payload.duration, {
     ...payload.addOns,
     selections: resolvedSelections,
   });
 
   const result = await adminDb.runTransaction(async (tx) => {
-    // --- all reads first (Firestore transaction rule) ---
+    // --- reads first (Firestore transaction rule) ---
     const snap = await tx.get(
       adminDb
         .collection(COLLECTION)
         .where("screenId", "==", payload.screenId)
         .where("date", "==", payload.date),
     );
-
-    const memberRef = payload.customerUid
-      ? adminDb.collection(MEMBERSHIPS).doc(payload.customerUid)
-      : null;
-    const memberSnap = memberRef ? await tx.get(memberRef) : null;
-
     const customerRef = customerDocRef(payload.customer.phone);
     const customerSnap = await tx.get(customerRef);
 
@@ -316,27 +335,6 @@ export async function confirmBookingDirect(
       throw new Error("SLOT_UNAVAILABLE");
     }
 
-    // --- membership discount (active member with a remaining allowance) ---
-    let amount = grossAmount;
-    let discount = 0;
-    if (memberSnap?.exists) {
-      const m = memberSnap.data() as {
-        status?: string;
-        remainingDiscountedBookings?: number;
-        discountPercent?: number;
-      };
-      const remaining = m.remainingDiscountedBookings ?? 0;
-      if (m.status === "active" && remaining > 0 && (m.discountPercent ?? 0) > 0) {
-        const applied = applyMembershipDiscount(grossAmount, m.discountPercent!);
-        amount = applied.net;
-        discount = applied.discount;
-        tx.update(memberRef!, {
-          remainingDiscountedBookings: remaining - 1,
-          updatedAt: FieldValue.serverTimestamp(),
-        });
-      }
-    }
-
     // --- create / link the phone-keyed customer account ---
     const customerId = writeCustomerUpsert(tx, customerSnap, {
       phone: payload.customer.phone,
@@ -346,7 +344,7 @@ export async function confirmBookingDirect(
       source: "online",
     });
 
-    // --- write the booking ---
+    // --- write the pending booking with the uploaded proof ---
     const ref = adminDb.collection(COLLECTION).doc();
     tx.set(ref, {
       screenId: payload.screenId,
@@ -362,21 +360,20 @@ export async function confirmBookingDirect(
       guestCount: payload.customer.guestCount,
       addOns: buildPersistedAddOns(payload.addOns, resolvedSelections),
       amount,
-      ...(discount > 0 ? { originalAmount: grossAmount, discount } : {}),
       amountPaid: 0,
       payments: [],
       paymentPlan: payload.paymentPlan,
-      status: "confirmed",
+      paymentScreenshotPath: payload.paymentScreenshotPath,
+      paymentStatus: "PENDING",
+      status: "pending",
       source: "online",
-      notes: "Reserved without online payment (Razorpay bypass — temporary).",
+      notes:
+        "Awaiting UPI payment verification — customer uploaded a payment screenshot.",
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     });
-    return { bookingId: ref.id, amount, discount };
+    return { bookingId: ref.id, amount };
   });
-
-  // Fire the confirmation email (idempotent + non-fatal).
-  await maybeSendBookingConfirmation(result.bookingId);
 
   return result;
 }

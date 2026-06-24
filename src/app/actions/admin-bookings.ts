@@ -34,7 +34,11 @@ import {
   experienceName,
   resolveSelectionsAgainstCatalog,
 } from "@/lib/booking/addons";
-import { collectedByMethod, balanceDue } from "@/lib/booking/payments";
+import {
+  collectedByMethod,
+  balanceDue,
+  applyUpiConfirmation,
+} from "@/lib/booking/payments";
 import type {
   Booking,
   BookingAddonSelection,
@@ -74,6 +78,53 @@ export async function markBookingCompletedAction(rawId: string): Promise<void> {
     throw new Error("Only confirmed bookings can be marked completed");
   }
   await updateBooking(id, { status: "completed" });
+  revalidate();
+  revalidatePath(`/admin/bookings/${id}`);
+}
+
+/**
+ * Confirm a pending booking whose customer paid by UPI and uploaded a
+ * screenshot. The admin has eyeballed the proof on the booking detail page;
+ * this records the UPI payment (the online portion — full bill, or the 50%
+ * deposit if that plan was chosen, with the remainder still due at the venue),
+ * flips the booking to `confirmed` + `paymentStatus: CONFIRMED`, and fires the
+ * "Booking confirmed" email. Atomic + idempotent (a second click is a no-op).
+ */
+export async function confirmUpiBookingAction(rawId: string): Promise<void> {
+  await requireAdmin();
+  const id = IdSchema.parse(rawId);
+
+  const ref = adminDb.collection(COLLECTION).doc(id);
+  await adminDb.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) throw new Error("Booking not found");
+    const booking = { id, ...snap.data() } as Booking;
+    if (booking.status === "confirmed") return; // already confirmed — idempotent
+    if (booking.status !== "pending") {
+      throw new Error("Only pending bookings can be confirmed");
+    }
+
+    // Record the verified UPI payment (full bill or 50% deposit, per plan) on
+    // top of any existing ledger entries. Pure ledger math lives in
+    // applyUpiConfirmation (unit-tested); here we just persist the result.
+    const { payments, amountPaid } = applyUpiConfirmation(booking, {
+      id: crypto.randomUUID(),
+      at: Date.now(),
+    });
+
+    tx.update(ref, {
+      status: "confirmed",
+      paymentStatus: "CONFIRMED",
+      paymentMethod: "upi",
+      payments,
+      amountPaid,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  });
+
+  // Fire the confirmation email (idempotent + non-fatal).
+  await maybeSendBookingConfirmation(id);
+
   revalidate();
   revalidatePath(`/admin/bookings/${id}`);
 }
