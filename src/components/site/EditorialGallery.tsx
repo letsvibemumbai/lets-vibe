@@ -6,11 +6,11 @@ import { photoUrl, type PhotoKey } from "@/lib/photos";
 type Frame = { key: PhotoKey; caption: string };
 
 const FRAMES: Frame[] = [
-  { key: "polaroid-1", caption: "Beach Vibes — sundown setting" },
-  { key: "polaroid-2", caption: "Grass Garden — anniversary setup" },
+  { key: "polaroid-1", caption: "The Beach Shack — sundown setting" },
+  { key: "polaroid-2", caption: "Love Den — anniversary setup" },
   { key: "polaroid-3", caption: "Fairy lights, almost always" },
   { key: "polaroid-4", caption: "Candle service" },
-  { key: "polaroid-5", caption: "Forest Retreat — group of eight" },
+  { key: "polaroid-5", caption: "Nature Paradise — Celebration setup" },
   { key: "polaroid-6", caption: "After-credit conversations" },
 ];
 

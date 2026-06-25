@@ -19,12 +19,20 @@ const FAQS = [
     a: "Cancel 24+ hours before your slot for a full refund. Inside 24 hours we'll reschedule once at no charge, but the booking amount becomes non-refundable.",
   },
   {
-    q: "What is the maximum group size per screen?",
-    a: "Beach Vibes fits 6–8, Grass Garden fits 2–4 (built for two), Forest Retreat fits 8–12. Larger group? Reach out — we'll plan around it.",
+    q: "How many people can come?",
+    a: "All package prices are for two. Each extra guest above two is ₹300/person. The Beach Shack and Love Den are tuned for couples and small groups; Nature Paradise is our premium jungle room with a private jacuzzi.",
   },
   {
     q: "What's the Celebration?",
-    a: "Cake, balloons, fairy lights, fog — and rose petals in the Forest room. We set everything before you walk in. Priced per room; the exact figure shows at booking. Prefer to pick? Every decoration is also available à la carte with a Movie booking.",
+    a: "Cake (250g), an LED message tag (birthday / anniversary / Better Together), walking-on-cloud fog effect, candle setup, plus the complimentary hamper — all set before you walk in. Available at Nature Paradise: ₹3,950 for 2 hours, ₹4,950 for 3 hours, for two.",
+  },
+  {
+    q: "What's the Movie Time package?",
+    a: "Private screening plus a complimentary hamper (dry snacks, juice, popcorn, mineral water). At The Beach Shack and Love Den: ₹999 / 1 hour, ₹1,500 / 2 hours, ₹1,950 / 3 hours, for two.",
+  },
+  {
+    q: "Do I need to bring an ID?",
+    a: "Yes — every guest needs to show a valid government ID at check-in. We note it down for our register; we don't keep a copy.",
   },
   {
     q: "What is the screen quality like?",

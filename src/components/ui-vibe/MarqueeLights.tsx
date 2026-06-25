@@ -5,9 +5,9 @@ import { motion, useReducedMotion } from "motion/react";
 
 const ITEMS = [
   "Now Showing",
-  "Beach Vibes",
-  "Grass Garden",
-  "Forest Retreat",
+  "The Beach Shack",
+  "Love Den",
+  "Nature Paradise",
   "Private Screenings",
   "Date Nights",
   "By the Hour",

@@ -13,9 +13,9 @@ export function formatTimeRange(start: string, end: string): string {
 }
 
 export const SCREEN_LABEL: Record<ScreenId, string> = {
-  beach: "Beach Vibes",
-  grass: "Grass Garden",
-  forest: "Forest Retreat",
+  beach: "The Beach Shack",
+  grass: "Love Den",
+  forest: "Nature Paradise",
 };
 
 export const STATUS_STYLES: Record<

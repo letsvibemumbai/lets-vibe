@@ -4,35 +4,35 @@ import type { Screen, ScreenId } from "@/types";
 export const SCREEN_PRESETS: Record<ScreenId, Screen> = {
   beach: {
     id: "beach",
-    name: "Beach Vibes",
+    name: "The Beach Shack",
     theme: "beach",
     description:
-      "Coastal warmth, soft sand textures, and a screen that feels like sunset.",
+      "Sand textures, warm sundown light, a screen tuned for the slow end of the day. Movie Time priced for two.",
     operatingStart: 9,
     operatingEnd: 21,
-    basePrices: { "1h": 1500, "2h": 2500, "3h": 3500 },
+    basePrices: { "1h": 999, "2h": 1500, "3h": 1950 },
     imageUrl: "",
   },
   grass: {
     id: "grass",
-    name: "Grass Garden",
-    theme: "grass",
+    name: "Love Den",
+    theme: "romantic",
     description:
-      "Open-air green for date nights. Add the Celebration and it glows.",
+      "A room built for two — soft seating, intentional lighting, the kind of quiet most date nights don't manage.",
     operatingStart: 9,
     operatingEnd: 21,
-    basePrices: { "1h": 1800, "2h": 2800, "3h": 3800 },
+    basePrices: { "1h": 999, "2h": 1500, "3h": 1950 },
     imageUrl: "",
   },
   forest: {
     id: "forest",
-    name: "Forest Retreat",
-    theme: "forest",
+    name: "Nature Paradise",
+    theme: "jungle",
     description:
-      "Canopy-immersed cocoon for larger groups. The kind of evening that becomes a story.",
+      "The premium jungle room. Canopy textures, a private jacuzzi, fog effect, and the full Celebration set ready before you arrive.",
     operatingStart: 9,
     operatingEnd: 21,
-    basePrices: { "1h": 2000, "2h": 3200, "3h": 4500 },
+    basePrices: { "1h": 2950, "2h": 3950, "3h": 4950 },
     imageUrl: "",
   },
 };

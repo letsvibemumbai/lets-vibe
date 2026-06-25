@@ -36,7 +36,7 @@ export function movieFromPrice(screens: Screen[]): number {
   return Math.min(...screens.map((s) => s.basePrices["1h"]));
 }
 
-/** Tag for a screen-restricted add-on, e.g. "Forest Retreat only".
+/** Tag for a screen-restricted add-on, e.g. "Nature Paradise only".
  * Null when the item is offered everywhere. */
 export function addonScreenTag(
   item: AddonItem,

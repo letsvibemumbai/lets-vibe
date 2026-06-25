@@ -53,9 +53,9 @@ function isRevenue(b: Booking): boolean {
 }
 
 const SCREEN_LABEL: Record<ScreenId, string> = {
-  beach: "Beach Vibes",
-  grass: "Grass Garden",
-  forest: "Forest Retreat",
+  beach: "The Beach Shack",
+  grass: "Love Den",
+  forest: "Nature Paradise",
 };
 
 const CATEGORY_LABEL: Record<ExpenseCategory, string> = {

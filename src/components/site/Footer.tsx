@@ -103,10 +103,10 @@ export function Footer() {
               <ul className="mt-5 space-y-2 text-[14px] text-ink/85">
                 <li>
                   <a
-                    href="tel:+910000000000"
+                    href="tel:+917738819151"
                     className="transition-colors hover:text-accent"
                   >
-                    +91 00000 00000
+                    +91 77388 19151
                   </a>
                 </li>
                 <li>
@@ -139,6 +139,14 @@ export function Footer() {
                     className="transition-colors hover:text-accent"
                   >
                     Terms
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/privacy"
+                    className="transition-colors hover:text-accent"
+                  >
+                    Privacy
                   </Link>
                 </li>
                 <li>

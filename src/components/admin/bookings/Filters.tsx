@@ -92,9 +92,9 @@ export function BookingsFilters(initial: Props) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={ANY}>All screens</SelectItem>
-            <SelectItem value="beach">Beach Vibes</SelectItem>
-            <SelectItem value="grass">Grass Garden</SelectItem>
-            <SelectItem value="forest">Forest Retreat</SelectItem>
+            <SelectItem value="beach">The Beach Shack</SelectItem>
+            <SelectItem value="grass">Love Den</SelectItem>
+            <SelectItem value="forest">Nature Paradise</SelectItem>
           </SelectContent>
         </Select>
       </FilterField>

@@ -10,23 +10,33 @@ type Rule = {
 const RULES: Rule[] = [
   {
     index: "01",
-    title: "No outside food",
-    body: "Outside food isn’t permitted inside the screening rooms.",
+    title: "No outside food or drink",
+    body: "Order anything you like from our private in-room menu. Outside food and drinks aren’t permitted.",
   },
   {
     index: "02",
-    title: "No outside drinks",
-    body: "Please don’t bring drinks in — none are allowed on the premises.",
+    title: "No smoking, no alcohol",
+    body: "Strictly prohibited inside every screen and across the premises.",
   },
   {
     index: "03",
-    title: "No smoking or alcohol",
-    body: "Smoking and drinking are strictly prohibited throughout.",
+    title: "CCTV in every room",
+    body: "All rooms are under CCTV surveillance, for everyone’s safety. Footage is retained only for security.",
   },
   {
     index: "04",
-    title: "CCTV in every room",
-    body: "All rooms are under CCTV surveillance, for everyone’s safety.",
+    title: "Valid ID at check-in",
+    body: "Every guest must show a valid government ID at the door. Bookings without ID can’t be honoured.",
+  },
+  {
+    index: "05",
+    title: "Two-guest pricing",
+    body: "All listed prices are for two. Each extra guest above two is ₹300/person.",
+  },
+  {
+    index: "06",
+    title: "You break it, you cover it",
+    body: "Whatever happens between friends or partners inside a room is on you — including any damage to projectors, screens, jacuzzi, or other equipment. Damages are billed to the booking.",
   },
 ];
 
