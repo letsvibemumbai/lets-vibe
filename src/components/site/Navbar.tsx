@@ -22,6 +22,7 @@ const NAV_LINKS = [
   { href: "/#experiences", label: "Experiences" },
   { href: "/#booking", label: "Booking" },
   { href: "/faq", label: "Journal" },
+  { href: "/about", label: "About" },
 ] as const;
 
 export function Navbar() {

@@ -85,6 +85,12 @@ export function Footer() {
                 Three private themed screens in Mumbai. Bring your film — the
                 rest of the evening is yours.
               </p>
+              <Link
+                href="/about"
+                className="mt-6 inline-block text-[11px] uppercase tracking-[0.22em] text-muted transition-colors hover:text-accent"
+              >
+                About us →
+              </Link>
             </div>
 
             {/* Visit */}
@@ -125,6 +131,14 @@ export function Footer() {
                     <InstagramGlyph className="h-3.5 w-3.5" />
                     Instagram
                   </a>
+                </li>
+                <li>
+                  <Link
+                    href="/contact"
+                    className="transition-colors hover:text-accent"
+                  >
+                    Contact us →
+                  </Link>
                 </li>
               </ul>
             </div>
