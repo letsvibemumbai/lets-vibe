@@ -17,7 +17,7 @@ export default function AdminLoginPage() {
         </div>
 
         <p className="mt-8 text-center text-xs text-foreground/45">
-          Only the configured admin email can sign in.
+          Authorized staff only.
         </p>
       </div>
     </div>

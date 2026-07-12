@@ -1,5 +1,20 @@
 export type ScreenId = "beach" | "grass" | "forest";
 
+/**
+ * A single admin-uploaded photo or video for a screen/theme, stored in Firebase
+ * Storage. `order` sorts the gallery (lowest first); the first image is the
+ * "cover" used on cards across the site. `path` is the Storage object path,
+ * kept so the blob can be deleted when the item is removed.
+ */
+export type ScreenMedia = {
+  id: string;
+  type: "image" | "video";
+  url: string;
+  path: string;
+  order: number;
+  caption?: string;
+};
+
 export type Screen = {
   id: ScreenId;
   name: string;
@@ -8,7 +23,10 @@ export type Screen = {
   operatingStart: number;
   operatingEnd: number;
   basePrices: { "1h": number; "2h": number; "3h": number };
+  /** Legacy single cover URL. Superseded by `media` (kept as a fallback). */
   imageUrl: string;
+  /** Admin-uploaded images + videos for this theme (Firebase Storage). */
+  media?: ScreenMedia[];
   blockedDates?: string[]; // YYYY-MM-DD when the screen is unavailable
 };
 

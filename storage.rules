@@ -1,0 +1,14 @@
+rules_version = '2';
+
+// Let's Vibe uploads and deletes go through the Firebase Admin SDK server-side
+// (the `/api/admin/**` and `/api/book/payment-proof` routes), which bypasses
+// these rules entirely. Public marketing assets (screen photos/videos, UPI QR)
+// are served via `makePublic()` object URLs, not the client SDK. So the client
+// SDK never needs read or write access to Storage — deny everything.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -60,8 +60,8 @@ export default function ContactPage() {
                 />
                 <Entry
                   label="Visit"
-                  primary="Bandra West, Mumbai"
-                  hint="Address coming soon · Free parking on site"
+                  primary="Satya Nagar, Borivali West"
+                  hint="Mumbai · Free parking on site"
                 />
               </ul>
             </div>

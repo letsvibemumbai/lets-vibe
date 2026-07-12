@@ -16,11 +16,11 @@ import { photoUrl } from "@/lib/photos";
 export const metadata: Metadata = {
   title: "About · Let's Vibe",
   description:
-    "Let's Vibe is a private themed cinema in Bandra West, Mumbai — three rooms, your own group, your film, dressed for the occasion if you want it. Your movie. Our space. Your vibe.",
+    "Let's Vibe is a private themed cinema in Satya Nagar, Borivali West, Mumbai — three rooms, your own group, your film, dressed for the occasion if you want it. Your movie. Our space. Your vibe.",
   openGraph: {
     title: "About · Let's Vibe",
     description:
-      "A private themed cinema in Bandra West, Mumbai. Three rooms, your own group, your film. Your movie. Our space. Your vibe.",
+      "A private themed cinema in Satya Nagar, Borivali West, Mumbai. Three rooms, your own group, your film. Your movie. Our space. Your vibe.",
   },
 };
 
@@ -28,7 +28,7 @@ const STATS = [
   { value: "03", label: "Private screens" },
   { value: "4K", label: "Projection" },
   { value: "5.1", label: "Dolby sound" },
-  { value: "Mumbai", label: "Bandra West" },
+  { value: "Borivali W.", label: "Mumbai" },
 ];
 
 export default function AboutPage() {
@@ -48,9 +48,9 @@ export default function AboutPage() {
                   </DisplayHeading>
                 </div>
                 <p className="text-[15px] leading-[1.7] text-muted lg:col-span-5">
-                  Let&rsquo;s Vibe is a private themed cinema in Bandra West,
-                  Mumbai. Three rooms, your own group, your film — and not a
-                  single stranger in the dark with you.
+                  Let&rsquo;s Vibe is a private themed cinema in Satya Nagar,
+                  Borivali West, Mumbai. Three rooms, your own group, your film
+                  — and not a single stranger in the dark with you.
                 </p>
               </header>
 

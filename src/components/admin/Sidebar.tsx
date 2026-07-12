@@ -15,15 +15,15 @@ import { cn } from "@/lib/utils";
 import { ADMIN_NAV, matchesNav } from "./nav";
 
 type Props = {
-  email: string;
+  username: string;
   mobileOpen: boolean;
   onMobileOpenChange: (open: boolean) => void;
 };
 
-export function Sidebar({ email, mobileOpen, onMobileOpenChange }: Props) {
+export function Sidebar({ username, mobileOpen, onMobileOpenChange }: Props) {
   return (
     <>
-      <DesktopSidebar email={email} />
+      <DesktopSidebar username={username} />
       <Sheet open={mobileOpen} onOpenChange={onMobileOpenChange}>
         <SheetContent
           side="left"
@@ -34,14 +34,14 @@ export function Sidebar({ email, mobileOpen, onMobileOpenChange }: Props) {
               <Logo href="/admin" imgClassName="h-10 w-auto" />
             </SheetTitle>
           </SheetHeader>
-          <SidebarBody email={email} onNavigate={() => onMobileOpenChange(false)} />
+          <SidebarBody username={username} onNavigate={() => onMobileOpenChange(false)} />
         </SheetContent>
       </Sheet>
     </>
   );
 }
 
-function DesktopSidebar({ email }: { email: string }) {
+function DesktopSidebar({ username }: { username: string }) {
   return (
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-hairline-strong bg-background md:flex">
       <div className="border-b border-hairline-strong px-5 py-5">
@@ -50,16 +50,16 @@ function DesktopSidebar({ email }: { email: string }) {
           admin
         </p>
       </div>
-      <SidebarBody email={email} />
+      <SidebarBody username={username} />
     </aside>
   );
 }
 
 function SidebarBody({
-  email,
+  username,
   onNavigate,
 }: {
-  email: string;
+  username: string;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname() ?? "";
@@ -108,7 +108,7 @@ function SidebarBody({
       <div className="mt-4 border-t border-hairline-strong pt-4">
         <div className="px-2 pb-3">
           <p className="text-base leading-none text-accent">signed in</p>
-          <p className="mt-1 truncate text-sm font-semibold text-foreground">{email}</p>
+          <p className="mt-1 truncate text-sm font-semibold text-foreground">{username}</p>
         </div>
         <button
           type="button"

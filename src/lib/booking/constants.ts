@@ -1,5 +1,5 @@
 import { photoUrl, type PhotoKey } from "@/lib/photos";
-import type { Screen, ScreenId } from "@/types";
+import type { Screen, ScreenId, ScreenMedia } from "@/types";
 
 export const SCREEN_PRESETS: Record<ScreenId, Screen> = {
   beach: {
@@ -49,16 +49,28 @@ export const SCREEN_GRADIENTS: Record<ScreenId, string> = {
   forest: "linear-gradient(135deg, #BFD7BA 0%, #5C8D6B 55%, #2F5E4B 100%)",
 };
 
+/** A screen's media (images + videos) sorted by `order` then id. */
+export function orderedScreenMedia(screen: {
+  media?: ScreenMedia[];
+}): ScreenMedia[] {
+  return [...(screen.media ?? [])].sort(
+    (a, b) => (a.order ?? 0) - (b.order ?? 0) || a.id.localeCompare(b.id),
+  );
+}
+
 /**
- * Canonical image for a screen on every customer-facing surface: the
- * admin-uploaded image when set, otherwise the curated themed photo. Keyed off
- * the stable screen id (beach/grass/forest), never the free-form `theme` field,
- * so admins can rename the theme without breaking the fallback art.
+ * Canonical cover image for a screen on every customer-facing surface: the
+ * first admin-uploaded image (by order) when present, else the legacy single
+ * `imageUrl`, else the curated themed fallback photo. Keyed off the stable
+ * screen id (beach/grass/forest), never the free-form `theme` field, so admins
+ * can rename the theme without breaking the fallback art.
  */
 export function screenImageUrl(
-  screen: { id: ScreenId; imageUrl?: string },
+  screen: { id: ScreenId; imageUrl?: string; media?: ScreenMedia[] },
   width = 1200,
 ): string {
+  const firstImage = orderedScreenMedia(screen).find((m) => m.type === "image");
+  if (firstImage) return firstImage.url;
   if (screen.imageUrl) return screen.imageUrl;
   return photoUrl(`screen-${screen.id}` as PhotoKey, width);
 }

@@ -11,7 +11,13 @@ import {
 } from "@/components/editorial";
 import { getScreen } from "@/lib/db/screens.server";
 import { listAddonItems, listAddonPackages } from "@/lib/db/addons.server";
-import { isScreenId, SCREEN_GRADIENTS } from "@/lib/booking/constants";
+import {
+  isScreenId,
+  orderedScreenMedia,
+  SCREEN_GRADIENTS,
+  screenImageUrl,
+} from "@/lib/booking/constants";
+import { ScreenGallery } from "@/components/site/ScreenGallery";
 import {
   effectivePackagePrice,
   itemAvailableOnScreen,
@@ -37,7 +43,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description: screen.description,
-      images: screen.imageUrl ? [{ url: screen.imageUrl }] : undefined,
+      images: [{ url: screenImageUrl(screen) }],
     },
   };
 }
@@ -63,6 +69,10 @@ export default async function PublicScreenPage({
     itemAvailableOnScreen(item, screen.id),
   );
 
+  const cover = screenImageUrl(screen, 1400);
+  // Gallery shows everything except the cover (which already leads the hero).
+  const galleryItems = orderedScreenMedia(screen).filter((m) => m.url !== cover);
+
   return (
     <PublicShell>
       <div className="min-h-screen font-body text-ink">
@@ -73,23 +83,17 @@ export default async function PublicScreenPage({
               <div className="grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">
                 <div
                   className="relative aspect-[4/5] w-full overflow-hidden rounded-sm lg:col-span-7"
-                  style={
-                    screen.imageUrl
-                      ? undefined
-                      : { backgroundImage: SCREEN_GRADIENTS[screen.id] }
-                  }
+                  style={{ backgroundImage: SCREEN_GRADIENTS[screen.id] }}
                 >
-                  {screen.imageUrl && (
-                    <Image
-                      src={screen.imageUrl}
-                      alt={screen.name}
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 60vw"
-                      className="object-cover photo-grade"
-                      priority
-                      unoptimized
-                    />
-                  )}
+                  <Image
+                    src={cover}
+                    alt={screen.name}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 60vw"
+                    className="object-cover photo-grade"
+                    priority
+                    unoptimized
+                  />
                 </div>
 
                 <div className="lg:col-span-5">
@@ -155,6 +159,8 @@ export default async function PublicScreenPage({
               </div>
             </div>
           </section>
+
+          <ScreenGallery items={galleryItems} />
 
           <section className="bg-cream-tonal">
             <div className="mx-auto max-w-[1280px] px-5 py-24 sm:px-8 sm:py-28 lg:px-12">

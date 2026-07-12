@@ -2,7 +2,7 @@ import "server-only";
 import crypto from "node:crypto";
 import { adminBucket } from "@/lib/firebase/admin";
 
-const MAX_BYTES = 5 * 1024 * 1024; // 5MB
+const MAX_BYTES = 5 * 1024 * 1024; // 5MB default (images / PDFs)
 
 const ALLOWED: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -10,11 +10,17 @@ const ALLOWED: Record<string, string> = {
   "image/webp": "webp",
   "image/gif": "gif",
   "application/pdf": "pdf",
+  "video/mp4": "mp4",
+  "video/webm": "webm",
+  "video/quicktime": "mov",
 };
 
 export type UploadOptions = {
   prefix: string; // folder, e.g. "expenses" or "screens"
   allow?: string[]; // optional content-type whitelist (subset of ALLOWED)
+  /** Per-call max size override (bytes). Defaults to 5MB. Videos pass a larger
+   * cap. */
+  maxBytes?: number;
   /**
    * When `true` (default), the blob is made world-readable via `makePublic()`
    * and the returned `url` works for any unauthenticated GET — appropriate for
@@ -35,11 +41,12 @@ export async function uploadPublicBlob(
   opts: UploadOptions,
 ): Promise<UploadResult> {
   if (file.size === 0) return { ok: false, status: 400, error: "Empty file" };
-  if (file.size > MAX_BYTES) {
+  const maxBytes = opts.maxBytes ?? MAX_BYTES;
+  if (file.size > maxBytes) {
     return {
       ok: false,
       status: 413,
-      error: `File exceeds ${Math.round(MAX_BYTES / 1024 / 1024)}MB`,
+      error: `File exceeds ${Math.round(maxBytes / 1024 / 1024)}MB`,
     };
   }
   const contentType = file.type || "application/octet-stream";
@@ -89,6 +96,20 @@ export async function uploadPublicBlob(
 
   const url = `https://storage.googleapis.com/${adminBucket.name}/${path}`;
   return { ok: true, url, path };
+}
+
+/**
+ * Delete a Storage object by path. Best-effort: a missing object (or a bucket
+ * hiccup) resolves without throwing so callers can rewrite their references
+ * regardless. Server-only — gate behind `requireAdmin()`.
+ */
+export async function deleteBlob(path: string): Promise<void> {
+  if (!path) return;
+  try {
+    await adminBucket.file(path).delete({ ignoreNotFound: true });
+  } catch (err) {
+    console.error("[deleteBlob] failed to delete", path, err);
+  }
 }
 
 /**

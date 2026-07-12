@@ -10,8 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { updateScreenAction } from "@/app/actions/admin-screens";
+import { ScreenMediaManager } from "@/components/admin/screens/ScreenMediaManager";
 import { formatINR } from "@/components/admin/dashboard/utils";
-import type { Screen } from "@/types";
+import type { Screen, ScreenMedia } from "@/types";
 
 type Props = {
   screen: Screen;
@@ -32,6 +33,7 @@ export function ScreenEditForm({ screen }: Props) {
   const [price2h, setPrice2h] = useState(screen.basePrices["2h"]);
   const [price3h, setPrice3h] = useState(screen.basePrices["3h"]);
   const [imageUrl, setImageUrl] = useState(screen.imageUrl ?? "");
+  const [media, setMedia] = useState<ScreenMedia[]>(screen.media ?? []);
   const [blockedDates, setBlockedDates] = useState<string[]>(
     screen.blockedDates ?? [],
   );
@@ -100,6 +102,7 @@ export function ScreenEditForm({ screen }: Props) {
             "3h": Math.max(0, price3h),
           },
           imageUrl: imageUrl || "",
+          media,
           blockedDates,
         });
         toast.success("Screen updated");
@@ -191,7 +194,19 @@ export function ScreenEditForm({ screen }: Props) {
         </p>
       </Section>
 
-      <Section title="Image">
+      <Section title="Photos & videos">
+        <ScreenMediaManager
+          screenId={screen.id}
+          value={media}
+          onChange={setMedia}
+        />
+      </Section>
+
+      <Section title="Cover image (fallback)">
+        <p className="mb-3 text-xs text-foreground/55">
+          Used only when no photos are uploaded above. The first uploaded image
+          is otherwise the cover shown across the site.
+        </p>
         <div className="space-y-3">
           {imageUrl ? (
             <div className="relative aspect-[16/9] w-full max-w-md overflow-hidden rounded-2xl bg-cream">

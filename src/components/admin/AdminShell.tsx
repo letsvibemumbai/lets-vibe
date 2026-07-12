@@ -9,7 +9,7 @@ import { getPageTitle } from "@/components/admin/nav";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 type Props = {
-  email: string;
+  username: string;
   children: React.ReactNode;
 };
 
@@ -21,7 +21,7 @@ function todayString(): string {
   });
 }
 
-export function AdminShell({ email, children }: Props) {
+export function AdminShell({ username, children }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname() ?? "";
   const pageTitle = getPageTitle(pathname);
@@ -29,7 +29,7 @@ export function AdminShell({ email, children }: Props) {
   return (
     <div className="flex min-h-screen bg-background font-body text-foreground">
       <Sidebar
-        email={email}
+        username={username}
         mobileOpen={mobileOpen}
         onMobileOpenChange={setMobileOpen}
       />

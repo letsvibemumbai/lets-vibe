@@ -56,7 +56,9 @@ Add every key from `.env.local.example`:
 | --- | --- | --- |
 | `NEXT_PUBLIC_FIREBASE_*` (7) | All | Client Firebase config (public). |
 | `FIREBASE_ADMIN_PROJECT_ID` / `_CLIENT_EMAIL` / `_PRIVATE_KEY` | All | Service account. See private-key note below. |
-| `ADMIN_EMAIL` / `NEXT_PUBLIC_ADMIN_EMAIL` | All | The admin login email. |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | All | Fixed admin-panel login. |
+| `ADMIN_SESSION_SECRET` | All | Long random string; signs the admin session cookie (falls back to the Firebase admin key if unset). |
+| `ADMIN_EMAIL` | All | Recipient/sender for booking-notification emails (no longer controls login). |
 | `RAZORPAY_*` | All | Optional while payments are bypassed. |
 | `GMAIL_USER` / `GMAIL_APP_PASSWORD` / `EMAIL_FROM` | All | Confirmation emails. |
 | `CHECKIN_SECRET` | All | Random 32+ chars for QR signing. |
@@ -70,18 +72,22 @@ keep the `\n` escapes — the app normalizes `\n` → newline in
 ### c. Firebase Console (required for auth + uploads)
 - **Authentication → Settings → Authorized domains:** add your Vercel domains
   (`your-app.vercel.app`, and your custom domain). Google sign-in (customer
-  booking) and the admin magic-link **fail on unlisted domains**. Per-deployment
-  preview URLs are unique — for stable preview testing, add a
+  booking) **fails on unlisted domains**. (Admin login is username/password and
+  is domain-independent.) Per-deployment preview URLs are unique — for stable
+  preview testing, add a
   [preview alias domain](https://vercel.com/docs/deployments/preview-deployments)
   and authorize that, or test auth on the production/alias URL.
-- **Storage:** confirm the bucket matches `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
-  (admin screen-image uploads use it).
+- **Storage — enable it once:** Firebase console → **Storage → Get started**
+  (provisions the default bucket). Screen photos/videos, receipts, UPI QR, and
+  payment proofs all upload here. Confirm the bucket matches
+  `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`. Deploy `storage.rules` (client access is
+  denied — all uploads go through the server-side Admin SDK).
 - **Firestore rules:** deploy `firestore.rules` (the admin pages + booking form
   depend on them).
 
 ### d. After deploy — smoke test
 1. Open the deployment URL → homepage renders, `/book` lists the three rooms.
-2. `/admin` → magic-link sign-in works (domain authorized).
+2. `/admin` → username/password sign-in works (`ADMIN_USERNAME` / `ADMIN_PASSWORD`).
 3. Make a test booking → confirmation screen shows a QR; the email arrives (if
    Gmail is set) with a working "View your booking" link.
 4. In `/admin/check-in`, scan that QR (or open it on your phone) → it resolves to

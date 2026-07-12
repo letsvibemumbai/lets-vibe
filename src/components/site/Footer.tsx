@@ -97,8 +97,8 @@ export function Footer() {
             <div className="md:col-span-3">
               <SectionLabel>Visit</SectionLabel>
               <ul className="mt-5 space-y-2 text-[14px] text-ink/85">
-                <li>Bandra West, Mumbai</li>
-                <li className="text-muted">Address coming soon</li>
+                <li>Satya Nagar, Borivali West</li>
+                <li className="text-muted">Mumbai</li>
                 <li className="pt-2 text-muted">Daily · 10:00 – 22:00</li>
               </ul>
             </div>
