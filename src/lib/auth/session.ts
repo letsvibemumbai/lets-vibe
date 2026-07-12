@@ -27,7 +27,7 @@ export async function getServerSession(): Promise<AdminSession | null> {
   if (!cookie) return null;
   const payload = verifySession(adminSessionSecret(), cookie);
   if (!payload) return null;
-  return { username: process.env.ADMIN_USERNAME || "admin" };
+  return { username: "Admin" };
 }
 
 export async function requireAdmin(): Promise<AdminSession> {

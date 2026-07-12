@@ -56,7 +56,7 @@ Add every key from `.env.local.example`:
 | --- | --- | --- |
 | `NEXT_PUBLIC_FIREBASE_*` (7) | All | Client Firebase config (public). |
 | `FIREBASE_ADMIN_PROJECT_ID` / `_CLIENT_EMAIL` / `_PRIVATE_KEY` | All | Service account. See private-key note below. |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | All | Fixed admin-panel login. |
+| `ADMIN_PASSWORD` | All | Admin-panel login password (password-only). |
 | `ADMIN_SESSION_SECRET` | All | Long random string; signs the admin session cookie (falls back to the Firebase admin key if unset). |
 | `ADMIN_EMAIL` | All | Recipient/sender for booking-notification emails (no longer controls login). |
 | `RAZORPAY_*` | All | Optional while payments are bypassed. |
@@ -87,7 +87,7 @@ keep the `\n` escapes — the app normalizes `\n` → newline in
 
 ### d. After deploy — smoke test
 1. Open the deployment URL → homepage renders, `/book` lists the three rooms.
-2. `/admin` → username/password sign-in works (`ADMIN_USERNAME` / `ADMIN_PASSWORD`).
+2. `/admin` → password sign-in works (`ADMIN_PASSWORD`).
 3. Make a test booking → confirmation screen shows a QR; the email arrives (if
    Gmail is set) with a working "View your booking" link.
 4. In `/admin/check-in`, scan that QR (or open it on your phone) → it resolves to

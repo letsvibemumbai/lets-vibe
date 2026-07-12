@@ -10,19 +10,18 @@ import { Label } from "@/components/ui/label";
 
 export function LoginForm() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!username || !password || submitting) return;
+    if (!password || submitting) return;
     setSubmitting(true);
     try {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ password }),
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -46,23 +45,13 @@ export function LoginForm() {
         <h2 className="font-display text-2xl">Sign in</h2>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="username">Username</Label>
-        <Input
-          id="username"
-          autoComplete="username"
-          required
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="admin"
-        />
-      </div>
-      <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
         <Input
           id="password"
           type="password"
           autoComplete="current-password"
           required
+          autoFocus
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="••••••••"
@@ -70,7 +59,7 @@ export function LoginForm() {
       </div>
       <Button
         type="submit"
-        disabled={submitting || !username || !password}
+        disabled={submitting || !password}
         className="h-11 w-full rounded-full bg-foreground text-cream hover:bg-foreground/90 disabled:opacity-60"
       >
         {submitting ? (

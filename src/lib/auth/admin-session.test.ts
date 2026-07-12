@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { credentialsMatch, signSession, verifySession } from "./admin-session";
+import { passwordMatches, signSession, verifySession } from "./admin-session";
 
 const SECRET = "test-secret-value-please-change";
 const TTL = 60_000;
@@ -43,19 +43,17 @@ describe("admin-session token", () => {
   });
 });
 
-describe("credentialsMatch", () => {
-  const expected = { username: "owner", password: "s3cret-pass" };
-
-  it("accepts the exact pair", () => {
-    expect(credentialsMatch({ username: "owner", password: "s3cret-pass" }, expected)).toBe(true);
+describe("passwordMatches", () => {
+  it("accepts the exact password", () => {
+    expect(passwordMatches("LetsVibe@2026", "LetsVibe@2026")).toBe(true);
   });
 
-  it("rejects a wrong username or password", () => {
-    expect(credentialsMatch({ username: "nope", password: "s3cret-pass" }, expected)).toBe(false);
-    expect(credentialsMatch({ username: "owner", password: "wrong" }, expected)).toBe(false);
+  it("rejects a wrong password", () => {
+    expect(passwordMatches("wrong", "LetsVibe@2026")).toBe(false);
+    expect(passwordMatches("letsvibe@2026", "LetsVibe@2026")).toBe(false);
   });
 
-  it("rejects when expected credentials are unset", () => {
-    expect(credentialsMatch({ username: "owner", password: "s3cret-pass" }, { username: "", password: "" })).toBe(false);
+  it("rejects when the expected password is unset", () => {
+    expect(passwordMatches("anything", "")).toBe(false);
   });
 });

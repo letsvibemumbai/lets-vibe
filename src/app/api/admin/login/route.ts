@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
-import { credentialsMatch, signSession } from "@/lib/auth/admin-session";
+import { passwordMatches, signSession } from "@/lib/auth/admin-session";
 import {
   SESSION_COOKIE,
   SESSION_TTL_MS,
@@ -11,7 +11,6 @@ import { clientIp, rateLimit } from "@/lib/rate-limit";
 export const runtime = "nodejs";
 
 const BodySchema = z.object({
-  username: z.string().min(1).max(200),
   password: z.string().min(1).max(200),
 });
 
@@ -26,10 +25,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const expectedUsername = process.env.ADMIN_USERNAME;
   const expectedPassword = process.env.ADMIN_PASSWORD;
   const secret = adminSessionSecret();
-  if (!expectedUsername || !expectedPassword || !secret) {
+  if (!expectedPassword || !secret) {
     return NextResponse.json(
       { error: "Admin login is not configured on the server." },
       { status: 500 },
@@ -43,13 +41,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const ok = credentialsMatch(
-    { username: body.username, password: body.password },
-    { username: expectedUsername, password: expectedPassword },
-  );
-  if (!ok) {
+  if (!passwordMatches(body.password, expectedPassword)) {
     return NextResponse.json(
-      { error: "Incorrect username or password." },
+      { error: "Incorrect password." },
       { status: 401 },
     );
   }

@@ -83,15 +83,9 @@ function safeEqual(a: string, b: string): boolean {
   return crypto.timingSafeEqual(ah, bh);
 }
 
-/** Constant-time check of submitted admin credentials against the expected
- * pair. Both fields must match; empty expected values never match. */
-export function credentialsMatch(
-  submitted: { username: string; password: string },
-  expected: { username: string; password: string },
-): boolean {
-  if (!expected.username || !expected.password) return false;
-  // Evaluate both (no short-circuit) so timing doesn't reveal which field failed.
-  const userOk = safeEqual(submitted.username, expected.username);
-  const passOk = safeEqual(submitted.password, expected.password);
-  return userOk && passOk;
+/** Constant-time check of the submitted admin password against the expected
+ * one. An empty expected password never matches. */
+export function passwordMatches(submitted: string, expected: string): boolean {
+  if (!expected) return false;
+  return safeEqual(submitted, expected);
 }
