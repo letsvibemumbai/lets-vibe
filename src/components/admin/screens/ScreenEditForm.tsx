@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { updateScreenAction } from "@/app/actions/admin-screens";
 import { ScreenMediaManager } from "@/components/admin/screens/ScreenMediaManager";
 import { formatINR } from "@/components/admin/dashboard/utils";
+import { HourText } from "@/components/time/Time";
 import type { Screen, ScreenMedia } from "@/types";
 
 type Props = {
@@ -176,8 +177,8 @@ export function ScreenEditForm({ screen }: Props) {
           </Field>
         </div>
         <p className="mt-2 text-xs text-foreground/55">
-          Bookings can start any half hour from {operatingStart}:00 and must end
-          by {operatingEnd}:00.
+          Bookings can start any half hour from <HourText value={operatingStart} />{" "}
+          and must end by <HourText value={operatingEnd} />.
         </p>
       </Section>
 

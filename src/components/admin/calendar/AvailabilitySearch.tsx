@@ -10,6 +10,9 @@ import {
 } from "@/app/actions/booking";
 import type { Duration } from "@/types";
 import { cn } from "@/lib/utils";
+import { TimeRange } from "@/components/time/Time";
+import { useTimeFormat } from "@/components/time/TimeFormatProvider";
+import { formatClock } from "@/lib/time";
 
 const OPEN_HOUR = 9;
 const CLOSE_HOUR = 21;
@@ -42,6 +45,7 @@ export function AvailabilitySearch() {
   const [checkedFor, setCheckedFor] = React.useState<string>("");
   const [error, setError] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
+  const { format: timeFormat } = useTimeFormat();
 
   const times = React.useMemo(() => startTimes(duration), [duration]);
   React.useEffect(() => {
@@ -54,7 +58,9 @@ export function AvailabilitySearch() {
       try {
         const r = await checkAvailabilityAction(date, time, duration);
         setResults(r);
-        setCheckedFor(`${date} · ${time} · ${duration}h`);
+        setCheckedFor(
+          `${date} · ${formatClock(time, timeFormat)} · ${duration}h`,
+        );
       } catch (e) {
         setResults(null);
         setError(e instanceof Error ? e.message : "Couldn't check availability");
@@ -170,7 +176,7 @@ export function AvailabilitySearch() {
                 <div className="min-w-0">
                   <p className="font-medium text-foreground">{r.name}</p>
                   <p className="text-[12px] text-foreground/55">
-                    {r.startTime}–{r.endTime}
+                    <TimeRange start={r.startTime} end={r.endTime} />
                   </p>
                 </div>
                 {r.available ? (

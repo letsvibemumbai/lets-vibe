@@ -9,6 +9,9 @@ import {
   checkAvailabilityAction,
   type ScreenAvailability,
 } from "@/app/actions/booking";
+import { TimeRange } from "@/components/time/Time";
+import { useTimeFormat } from "@/components/time/TimeFormatProvider";
+import { formatClock } from "@/lib/time";
 import type { Duration } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +43,7 @@ type Props = {
 };
 
 export function AvailabilityChecker({ variant = "panel", className }: Props) {
+  const { format: timeFormat } = useTimeFormat();
   const today = React.useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
   const [date, setDate] = React.useState(today);
   const [duration, setDuration] = React.useState<Duration>(2);
@@ -112,7 +116,7 @@ export function AvailabilityChecker({ variant = "panel", className }: Props) {
           >
             {times.map((t) => (
               <option key={t} value={t} className="bg-[#141419] text-ink">
-                {t}
+                {formatClock(t, timeFormat)}
               </option>
             ))}
           </select>
@@ -184,8 +188,8 @@ export function AvailabilityChecker({ variant = "panel", className }: Props) {
                   {r.name}
                 </p>
                 <p className="mt-0.5 text-[12px] text-muted">
-                  {r.startTime}–{r.endTime} · from ₹
-                  {r.startingPrice.toLocaleString("en-IN")}
+                  <TimeRange start={r.startTime} end={r.endTime} sep="–" /> · from
+                  ₹{r.startingPrice.toLocaleString("en-IN")}
                 </p>
               </div>
               {r.available ? (

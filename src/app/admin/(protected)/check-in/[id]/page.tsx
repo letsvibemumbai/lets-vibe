@@ -28,6 +28,7 @@ import { StatusBadge } from "@/components/admin/dashboard/StatusBadge";
 import { CheckInActions } from "@/components/admin/checkin/CheckInActions";
 import { CollectPaymentPanel } from "@/components/admin/payments/CollectPaymentPanel";
 import { balanceDue } from "@/lib/booking/payments";
+import { TimeRange } from "@/components/time/Time";
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Check-in · Let's Vibe Admin" };
@@ -178,7 +179,12 @@ export default async function CheckInVerifyPage({
           <Detail
             icon={<Clock className="h-4 w-4" />}
             label="Slot"
-            value={`${booking.startTime} – ${booking.endTime} · ${booking.duration}h`}
+            value={
+              <>
+                <TimeRange start={booking.startTime} end={booking.endTime} /> ·{" "}
+                {booking.duration}h
+              </>
+            }
           />
           <Detail
             icon={<Users className="h-4 w-4" />}
@@ -281,7 +287,7 @@ function Detail({
 }: {
   icon: React.ReactNode;
   label: string;
-  value: string;
+  value: React.ReactNode;
   mono?: boolean;
 }) {
   return (

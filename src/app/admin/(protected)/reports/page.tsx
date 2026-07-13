@@ -7,6 +7,7 @@ import {
   formatINR,
   summarizeAddOns,
 } from "@/components/admin/dashboard/utils";
+import { TimeRange } from "@/components/time/Time";
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Monthly report · Let's Vibe Admin" };
@@ -194,7 +195,7 @@ export default async function AdminReportsPage({
                           {b.date}
                         </td>
                         <td className="py-1.5 pr-3 text-foreground/75">
-                          {b.startTime}–{b.endTime}
+                          <TimeRange start={b.startTime} end={b.endTime} />
                         </td>
                         <td className="py-1.5 pr-3 text-foreground/75">
                           {SCREEN_LABEL[b.screenId]}

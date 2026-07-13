@@ -28,6 +28,7 @@ import {
   formatINR,
   SCREEN_LABEL,
 } from "@/components/admin/dashboard/utils";
+import { TimeRange } from "@/components/time/Time";
 import type {
   AddonItem,
   AddonPackage,
@@ -261,7 +262,7 @@ export function OfflineBookingForm({ screens, items, packages }: Props) {
                         : "bg-card ring-hairline-strong hover:bg-cream",
                     )}
                   >
-                    {s.startTime}–{s.endTime}
+                    <TimeRange start={s.startTime} end={s.endTime} />
                   </button>
                 ))}
               </div>

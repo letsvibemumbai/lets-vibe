@@ -11,6 +11,7 @@ import {
 import type { Booking } from "@/types";
 import { StatusBadge } from "./StatusBadge";
 import { SCREEN_LABEL, formatINR } from "./utils";
+import { TimeText } from "@/components/time/Time";
 
 type Props = {
   bookings: Booking[];
@@ -73,7 +74,7 @@ export function RecentBookingsCard({ bookings }: Props) {
                   <TableCell className="text-sm text-foreground/75">
                     {b.date}
                     <span className="ml-1 text-foreground/50">
-                      · {b.startTime}
+                      · <TimeText value={b.startTime} />
                     </span>
                   </TableCell>
                   <TableCell className="text-sm font-medium text-foreground">

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { SectionLabel } from "@/components/editorial";
+import { TimeRange } from "@/components/time/Time";
 import { experienceName } from "@/lib/booking/addons";
 import { screenImageUrl } from "@/lib/booking/constants";
 import type { Booking, Screen } from "@/types";
@@ -72,7 +73,13 @@ export function BookingSummary({
         <Row label="Date" value={formatDate(date)} />
         <Row
           label="Time"
-          value={startTime && endTime ? `${startTime} – ${endTime}` : "—"}
+          value={
+            startTime && endTime ? (
+              <TimeRange start={startTime} end={endTime} />
+            ) : (
+              "—"
+            )
+          }
         />
         <Row
           label="Duration"
@@ -126,7 +133,7 @@ export function BookingSummary({
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-start justify-between gap-4">
       <dt className="text-muted">{label}</dt>

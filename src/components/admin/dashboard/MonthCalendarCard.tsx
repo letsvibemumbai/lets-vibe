@@ -16,11 +16,8 @@ import { CalendarDays, ChevronLeft, ChevronRight, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Booking } from "@/types";
 import { StatusBadge } from "./StatusBadge";
-import {
-  SCREEN_LABEL,
-  formatINR,
-  formatTimeRange,
-} from "./utils";
+import { SCREEN_LABEL, formatINR } from "./utils";
+import { TimeRange } from "@/components/time/Time";
 
 type Props = {
   today: string; // YYYY-MM-DD
@@ -164,7 +161,7 @@ export function MonthCalendarCard({ today, bookings }: Props) {
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-foreground">
-                    {formatTimeRange(b.startTime, b.endTime)}
+                    <TimeRange start={b.startTime} end={b.endTime} />
                     <span className="ml-2 text-xs text-foreground/55">
                       {SCREEN_LABEL[b.screenId]}
                     </span>

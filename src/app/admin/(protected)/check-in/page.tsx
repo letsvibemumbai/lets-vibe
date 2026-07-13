@@ -5,6 +5,7 @@ import { istDateAndMinutes } from "@/lib/slots/engine";
 import { checkInConfigured } from "@/lib/checkin/token";
 import { QrScanner } from "@/components/admin/checkin/QrScanner";
 import { SCREEN_LABEL } from "@/components/admin/dashboard/utils";
+import { TimeRange } from "@/components/time/Time";
 import { cn } from "@/lib/utils";
 import type { Booking, CheckInStatus } from "@/types";
 
@@ -80,8 +81,9 @@ function TodayRow({ booking }: { booking: Booking }) {
             {booking.customerName}
           </p>
           <p className="mt-0.5 text-xs text-foreground/55">
-            {booking.startTime}–{booking.endTime} · {SCREEN_LABEL[booking.screenId]} ·{" "}
-            {booking.guestCount} guest{booking.guestCount === 1 ? "" : "s"}
+            <TimeRange start={booking.startTime} end={booking.endTime} /> ·{" "}
+            {SCREEN_LABEL[booking.screenId]} · {booking.guestCount} guest
+            {booking.guestCount === 1 ? "" : "s"}
           </p>
         </div>
         <span

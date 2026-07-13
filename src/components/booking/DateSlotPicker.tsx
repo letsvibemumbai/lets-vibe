@@ -11,6 +11,7 @@ import { SectionLabel } from "@/components/editorial";
 import { useBookingStore } from "@/lib/booking/store";
 import { calculateBookingPrice } from "@/lib/slots/pricing";
 import { getAllSlotsAction } from "@/app/actions/booking";
+import { TimeRange } from "@/components/time/Time";
 import type { Availability, Slot } from "@/lib/slots/engine";
 import type { Duration, Screen } from "@/types";
 import { cn } from "@/lib/utils";
@@ -23,16 +24,6 @@ function clampDuration(n: number): Duration {
 }
 
 type Props = { screen: Screen };
-
-function prettyTime(hhmm: string): string {
-  const [h, m] = hhmm.split(":");
-  const hour = String(parseInt(h, 10)).padStart(2, "0");
-  return `${hour}:${m}`;
-}
-
-function slotLabel(slot: Slot): string {
-  return `${prettyTime(slot.startTime)} – ${prettyTime(slot.endTime)}`;
-}
 
 export function DateSlotPicker({ screen }: Props) {
   const today = useMemo(() => startOfDay(new Date()), []);
@@ -267,7 +258,7 @@ function SlotGrid({
             "focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/50",
           )}
         >
-          {slotLabel(slot)}
+          <TimeRange start={slot.startTime} end={slot.endTime} />
         </Link>
       ))}
       {pending && (

@@ -24,6 +24,7 @@ import {
 } from "@/lib/booking/addons";
 import { selectCelebrationPackage } from "@/lib/experiences";
 import { formatINR } from "@/components/admin/dashboard/utils";
+import { HourText } from "@/components/time/Time";
 
 export const dynamic = "force-dynamic";
 
@@ -113,7 +114,12 @@ export default async function PublicScreenPage({
                   <dl className="mt-12 divide-y divide-hairline border-y border-hairline text-[13px]">
                     <Stat
                       label="Operating hours"
-                      value={`${screen.operatingStart}:00 – ${screen.operatingEnd}:00`}
+                      value={
+                        <>
+                          <HourText value={screen.operatingStart} /> –{" "}
+                          <HourText value={screen.operatingEnd} />
+                        </>
+                      }
                     />
                     <Stat
                       label="Starting price"

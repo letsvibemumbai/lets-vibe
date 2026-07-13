@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { SectionLabel } from "@/components/editorial";
+import { TimeFormatToggle } from "@/components/time/TimeFormatToggle";
 import { photoUrl, type PhotoKey } from "@/lib/photos";
 
 function InstagramGlyph({ className }: { className?: string }) {
@@ -185,7 +186,10 @@ export function Footer() {
 
           <div className="mt-16 flex flex-col items-start justify-between gap-3 border-t border-hairline pt-7 text-[11px] uppercase tracking-[0.22em] text-muted sm:flex-row sm:items-center">
             <p>&copy; {year} Let&rsquo;s Vibe</p>
-            <p>Made in Mumbai</p>
+            <div className="flex items-center gap-4">
+              <TimeFormatToggle />
+              <p>Made in Mumbai</p>
+            </div>
           </div>
         </div>
       </div>

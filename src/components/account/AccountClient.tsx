@@ -14,6 +14,7 @@ import { signInWithGoogle, signOut } from "@/lib/firebase/auth";
 import { SCREEN_PRESETS, isScreenId } from "@/lib/booking/constants";
 import { balanceDue } from "@/lib/booking/payments";
 import { getScreens as getScreensClient } from "@/lib/db/screens.client";
+import { TimeRange } from "@/components/time/Time";
 import {
   getMembershipConfigAction,
   getMyBookingsAction,
@@ -214,7 +215,8 @@ export function AccountClient() {
                     {screenName(b.screenId)}
                   </p>
                   <p className="mt-1 text-[13px] text-muted">
-                    {prettyDate(b.date)} · {b.startTime}–{b.endTime}
+                    {prettyDate(b.date)} ·{" "}
+                    <TimeRange start={b.startTime} end={b.endTime} sep="–" />
                   </p>
                 </div>
                 <div className="sm:col-span-3">

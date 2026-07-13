@@ -3,6 +3,7 @@ import Image from "next/image";
 import { ArrowRight, CalendarOff, Clock } from "lucide-react";
 import { getScreens } from "@/lib/db/screens.server";
 import { formatINR } from "@/components/admin/dashboard/utils";
+import { HourText } from "@/components/time/Time";
 
 export const metadata = {
   title: "Screens · Let's Vibe Admin",
@@ -70,7 +71,12 @@ export default async function AdminScreensPage() {
                     <Row
                       icon={<Clock className="h-3 w-3" />}
                       label="Hours"
-                      value={`${s.operatingStart}:00 – ${s.operatingEnd}:00`}
+                      value={
+                        <>
+                          <HourText value={s.operatingStart} /> –{" "}
+                          <HourText value={s.operatingEnd} />
+                        </>
+                      }
                     />
                     <Row
                       label="1h / 2h / 3h"

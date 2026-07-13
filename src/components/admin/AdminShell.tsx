@@ -7,6 +7,7 @@ import { CalendarPlus, Menu } from "lucide-react";
 import { Sidebar } from "@/components/admin/Sidebar";
 import { getPageTitle } from "@/components/admin/nav";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { TimeFormatToggle } from "@/components/time/TimeFormatToggle";
 
 type Props = {
   username: string;
@@ -60,6 +61,7 @@ export function AdminShell({ username, children }: Props) {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            <TimeFormatToggle tone="admin" />
             <ThemeToggle tone="admin" />
             <Link
               href="/admin/bookings/new"

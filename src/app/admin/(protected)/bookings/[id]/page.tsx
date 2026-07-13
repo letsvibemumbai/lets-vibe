@@ -25,6 +25,7 @@ import { CancelBookingButton } from "@/components/admin/bookings/CancelButton";
 import { ConfirmPaymentPanel } from "@/components/admin/bookings/ConfirmPaymentPanel";
 import { RefundButton } from "@/components/admin/bookings/RefundButton";
 import { CollectPaymentPanel } from "@/components/admin/payments/CollectPaymentPanel";
+import { TimeRange } from "@/components/time/Time";
 import type { CheckInStatus } from "@/types";
 
 export const metadata = { title: "Booking · Let's Vibe Admin" };
@@ -93,7 +94,7 @@ export default async function BookingDetailPage({
             <span>{booking.date}</span>
             <span className="text-foreground/30">·</span>
             <span>
-              {booking.startTime}–{booking.endTime}
+              <TimeRange start={booking.startTime} end={booking.endTime} />
             </span>
             <span className="text-foreground/30">·</span>
             <span>{booking.duration}h</span>

@@ -28,6 +28,9 @@ import {
   formatINR,
   summarizeAddOns,
 } from "@/components/admin/dashboard/utils";
+import { TimeRange, TimeText } from "@/components/time/Time";
+import { useTimeFormat } from "@/components/time/TimeFormatProvider";
+import { formatClock } from "@/lib/time";
 import type { Booking, ScreenId } from "@/types";
 
 type Props = {
@@ -64,6 +67,7 @@ export function AdminCalendar({ initialMonth, today, bookings }: Props) {
   });
   const [filter, setFilter] = useState<Filter>("all");
   const [sheet, setSheet] = useState<SheetMode>({ kind: "none" });
+  const { format: timeFormat } = useTimeFormat();
 
   const todayDate = parseISO(today);
 
@@ -173,9 +177,9 @@ export function AdminCalendar({ initialMonth, today, bookings }: Props) {
                         "truncate rounded-md px-1.5 py-0.5 text-left text-[10.5px] font-medium ring-1 ring-inset",
                         SCREEN_CHIP[b.screenId],
                       )}
-                      title={`${b.startTime} ${b.customerName} · ${SCREEN_LABEL[b.screenId]}`}
+                      title={`${formatClock(b.startTime, timeFormat)} ${b.customerName} · ${SCREEN_LABEL[b.screenId]}`}
                     >
-                      {b.startTime} {b.customerName}
+                      <TimeText value={b.startTime} /> {b.customerName}
                     </button>
                   ))}
                   {list.length > 4 && (
@@ -316,7 +320,7 @@ function BookingDetailSheet({ booking }: { booking: Booking }) {
         </SheetTitle>
         <SheetDescription>
           {SCREEN_LABEL[booking.screenId]} · {booking.date} ·{" "}
-          {booking.startTime}–{booking.endTime}
+          <TimeRange start={booking.startTime} end={booking.endTime} />
         </SheetDescription>
       </SheetHeader>
       <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4 text-sm">
@@ -386,7 +390,8 @@ function DayDetailSheet({
             >
               <div className="min-w-0">
                 <p className="text-sm font-semibold">
-                  {b.startTime}–{b.endTime} · {b.customerName}
+                  <TimeRange start={b.startTime} end={b.endTime} /> ·{" "}
+                  {b.customerName}
                 </p>
                 <p className="text-xs opacity-80">
                   {SCREEN_LABEL[b.screenId]} · {b.duration}h ·{" "}

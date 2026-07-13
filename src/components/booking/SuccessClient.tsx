@@ -7,6 +7,9 @@ import { Copy } from "lucide-react";
 import { toast } from "sonner";
 import { QuietButton, SectionLabel } from "@/components/editorial";
 import { EntryPass } from "@/components/booking/EntryPass";
+import { TimeRange, TimeText } from "@/components/time/Time";
+import { useTimeFormat } from "@/components/time/TimeFormatProvider";
+import { formatClockRange } from "@/lib/time";
 import { screenImageUrl } from "@/lib/booking/constants";
 import { balanceDue, totalCollected } from "@/lib/booking/payments";
 import type { Booking, Screen } from "@/types";
@@ -27,11 +30,12 @@ function formatDate(date: string): string {
  * "Reserved." in Fraunces italic. No confetti, no exclamation, no bouncing.
  */
 export function SuccessClient({ booking, screen, entryQr }: Props) {
+  const { format } = useTimeFormat();
   const collected = totalCollected(booking);
   const due = balanceDue(booking);
   const shareText = `Reserved ${screen.name} on Let's Vibe — ${formatDate(
     booking.date,
-  )}, ${booking.startTime}–${booking.endTime}. Booking ${booking.id}.`;
+  )}, ${formatClockRange(booking.startTime, booking.endTime, format, "–")}. Booking ${booking.id}.`;
 
   const waHref = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
@@ -95,8 +99,14 @@ export function SuccessClient({ booking, screen, entryQr }: Props) {
         <p className="max-w-md text-[15px] leading-[1.7] text-muted">
           We&rsquo;ll see you on{" "}
           <span className="text-ink">{formatDate(booking.date)}</span> from{" "}
-          <span className="text-ink">{booking.startTime}</span> to{" "}
-          <span className="text-ink">{booking.endTime}</span>.
+          <span className="text-ink">
+            <TimeText value={booking.startTime} />
+          </span>{" "}
+          to{" "}
+          <span className="text-ink">
+            <TimeText value={booking.endTime} />
+          </span>
+          .
         </p>
       </motion.div>
 
@@ -133,7 +143,10 @@ export function SuccessClient({ booking, screen, entryQr }: Props) {
 
         <dl className="mt-7 grid grid-cols-2 gap-y-3 text-[13px]">
           <Row label="Room" value={screen.name} />
-          <Row label="Time" value={`${booking.startTime} – ${booking.endTime}`} />
+          <Row
+            label="Time"
+            value={<TimeRange start={booking.startTime} end={booking.endTime} />}
+          />
           <Row
             label="Duration"
             value={`${booking.duration} hour${booking.duration > 1 ? "s" : ""}`}
@@ -189,7 +202,7 @@ export function SuccessClient({ booking, screen, entryQr }: Props) {
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <>
       <dt className="text-[10px] uppercase tracking-[0.22em] text-muted">

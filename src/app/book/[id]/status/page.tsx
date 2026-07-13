@@ -11,6 +11,7 @@ import { buildCheckInUrl } from "@/lib/checkin/token";
 import { appUrl } from "@/lib/app-url";
 import { EntryPass } from "@/components/booking/EntryPass";
 import { SectionLabel } from "@/components/editorial";
+import { TimeRange } from "@/components/time/Time";
 import type { BookingStatus } from "@/types";
 
 export const metadata = { title: "Booking status · Let's Vibe" };
@@ -104,7 +105,12 @@ export default async function StatusPage({
           <Field
             icon={Clock}
             label="Time"
-            value={`${booking.startTime} – ${booking.endTime} · ${booking.duration}h`}
+            value={
+              <>
+                <TimeRange start={booking.startTime} end={booking.endTime} /> ·{" "}
+                {booking.duration}h
+              </>
+            }
           />
           <Field icon={Users} label="Guests" value={String(booking.guestCount)} />
           <Field label="Total" value={`₹${booking.amount.toLocaleString("en-IN")}`} />
@@ -166,7 +172,7 @@ function Field({
 }: {
   icon?: React.ElementType;
   label: string;
-  value: string;
+  value: React.ReactNode;
 }) {
   return (
     <div className="flex items-start gap-3">

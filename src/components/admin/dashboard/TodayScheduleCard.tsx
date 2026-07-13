@@ -8,9 +8,9 @@ import {
   SCREEN_LABEL,
   STATUS_STYLES,
   formatINR,
-  formatTimeRange,
   summarizeAddOns,
 } from "./utils";
+import { TimeRange } from "@/components/time/Time";
 
 type Props = {
   bookings: Booking[];
@@ -111,7 +111,7 @@ function BookingRow({ booking }: { booking: Booking }) {
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-display text-sm uppercase text-foreground">
-            {formatTimeRange(booking.startTime, booking.endTime)}
+            <TimeRange start={booking.startTime} end={booking.endTime} />
             <span className="ml-2 font-body text-xs font-semibold text-foreground/50">
               {booking.duration}h
             </span>

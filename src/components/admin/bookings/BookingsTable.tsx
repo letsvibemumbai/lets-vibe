@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { StatusBadge } from "@/components/admin/dashboard/StatusBadge";
 import { SCREEN_LABEL, formatINR } from "@/components/admin/dashboard/utils";
+import { TimeRange } from "@/components/time/Time";
 import type { Booking } from "@/types";
 import type { BookingListFilters } from "@/lib/db/bookings.server";
 import {
@@ -196,7 +197,7 @@ export function BookingsTable({ rows, filters }: Props) {
                     {b.date}
                   </TableCell>
                   <TableCell className="text-sm text-foreground/75">
-                    {b.startTime}–{b.endTime}
+                    <TimeRange start={b.startTime} end={b.endTime} />
                   </TableCell>
                   <TableCell className="text-sm text-foreground/75">
                     {SCREEN_LABEL[b.screenId]}
