@@ -35,18 +35,63 @@ export function ScreenMediaManager({ screenId, value, onChange }: Props) {
   // Index of the first image = the cover used across the site.
   const coverIndex = value.findIndex((m) => m.type === "image");
 
+  // Direct-to-Storage upload: (1) get a signed URL, (2) PUT the bytes straight
+  // to Firebase Storage (no serverless body-size limit → large images + videos
+  // work), (3) finalize to make it public. Each step surfaces a clear error.
   async function uploadOne(file: File): Promise<ScreenMedia | null> {
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("screenId", screenId);
-    const res = await fetch("/api/admin/screens/media", { method: "POST", body: fd });
-    if (!res.ok) {
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
-      toast.error(`${file.name}: ${data.error ?? "Upload failed"}`);
+    try {
+      const signRes = await fetch("/api/admin/screens/media/sign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          screenId,
+          contentType: file.type,
+          size: file.size,
+        }),
+      });
+      if (!signRes.ok) {
+        const data = (await signRes.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        toast.error(`${file.name}: ${data.error ?? "Upload failed"}`);
+        return null;
+      }
+      const { uploadUrl, path, type } = (await signRes.json()) as {
+        uploadUrl: string;
+        path: string;
+        type: "image" | "video";
+      };
+
+      const putRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!putRes.ok) {
+        toast.error(`${file.name}: couldn't upload to storage (${putRes.status})`);
+        return null;
+      }
+
+      const finRes = await fetch("/api/admin/screens/media/finalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path, type }),
+      });
+      if (!finRes.ok) {
+        const data = (await finRes.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        toast.error(`${file.name}: ${data.error ?? "Finalize failed"}`);
+        return null;
+      }
+      const data = (await finRes.json()) as Omit<ScreenMedia, "order" | "caption">;
+      return { ...data, order: 0 };
+    } catch (err) {
+      toast.error(
+        `${file.name}: ${err instanceof Error ? err.message : "Upload failed"}`,
+      );
       return null;
     }
-    const data = (await res.json()) as Omit<ScreenMedia, "order" | "caption">;
-    return { ...data, order: 0 };
   }
 
   async function onFiles(files: FileList) {
@@ -136,7 +181,7 @@ export function ScreenMediaManager({ screenId, value, onChange }: Props) {
           {uploading ? "Uploading…" : "Upload images / videos"}
         </Button>
         <p className="text-xs text-foreground/55">
-          JPG / PNG / WebP up to 5MB · MP4 / WebM / MOV up to 50MB. The first
+          JPG / PNG / WebP up to 15MB · MP4 / WebM / MOV up to 200MB. The first
           image is the cover used across the site.
         </p>
       </div>

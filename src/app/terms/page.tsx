@@ -102,7 +102,7 @@ export default function TermsPage() {
                     Paradise): private screening + complimentary hamper +
                     celebration cake (250g) + LED message tag (birthday /
                     anniversary / Better Together) + walking-on-cloud fog
-                    effect + candle setup. 2 hours ₹3,950 · 3 hours ₹4,950.
+                    effect + candle setup. 2 hours ₹2,950 · 3 hours ₹3,950.
                   </p>
                 </Block>
 

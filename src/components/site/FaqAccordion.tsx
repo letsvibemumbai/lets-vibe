@@ -24,7 +24,7 @@ const FAQS = [
   },
   {
     q: "What's the Celebration?",
-    a: "Cake (250g), an LED message tag (birthday / anniversary / Better Together), walking-on-cloud fog effect, candle setup, plus the complimentary hamper — all set before you walk in. Available at Nature Paradise: ₹3,950 for 2 hours, ₹4,950 for 3 hours, for two.",
+    a: "Cake (250g), an LED message tag (birthday / anniversary / Better Together), walking-on-cloud fog effect, candle setup, plus the complimentary hamper — all set before you walk in. Available at Nature Paradise: ₹1,950 for 1 hour, ₹2,950 for 2 hours, ₹3,950 for 3 hours, for two.",
   },
   {
     q: "What's the Movie Time package?",

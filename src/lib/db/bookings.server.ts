@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
 import type {
@@ -75,7 +76,14 @@ export async function getBookingsForScreenDate(
   return sortByDateTime(snap.docs.map((d) => toBooking(d.id, d.data())));
 }
 
-export async function getBookingsInRange(
+// Per-request memoized: the accounting + reports + dashboard pages each derive
+// several aggregates (revenue by screen / source / method, collection summary,
+// daily totals) from the SAME date range. Without this, every aggregate helper
+// re-fetched the range from Firestore — e.g. the accounting page ran this query
+// 4× per load. `cache` collapses identical (startDate, endDate) calls within one
+// request to a single read; a new request always re-fetches, so admin edits
+// (which revalidatePath the admin routes) still show up immediately.
+export const getBookingsInRange = cache(async function getBookingsInRange(
   startDate: string,
   endDate: string,
 ): Promise<Booking[]> {
@@ -85,7 +93,7 @@ export async function getBookingsInRange(
     .where("date", "<=", endDate)
     .get();
   return sortByDateTime(snap.docs.map((d) => toBooking(d.id, d.data())));
-}
+});
 
 export async function getBookingsForMonth(year: number, month: number): Promise<Booking[]> {
   const { start, end } = monthRange(year, month);
@@ -138,6 +146,15 @@ export type BookingListResult = {
   pageCount: number;
 };
 
+// Per-request memoized full-collection read. `listBookings` and
+// `listBookingsForExport` both filter the whole collection in memory; when a
+// page renders both (or the same list twice) this fetches once. A new request
+// always re-reads, so it stays consistent with admin edits.
+const getAllBookings = cache(async function getAllBookings(): Promise<Booking[]> {
+  const snap = await adminDb.collection(COLLECTION).get();
+  return snap.docs.map((d) => toBooking(d.id, d.data()));
+});
+
 export async function listBookings(
   filters: BookingListFilters,
   page: number,
@@ -145,8 +162,9 @@ export async function listBookings(
 ): Promise<BookingListResult> {
   // Index-free: fetch the collection and apply all filters + ordering in
   // memory. Avoids composite-index requirements for arbitrary filter combos.
-  const snap = await adminDb.collection(COLLECTION).get();
-  let rows = snap.docs.map((d) => toBooking(d.id, d.data()));
+  // `.slice()` copies the shared cached array so the in-place `.sort()` below
+  // never mutates the memoized read.
+  let rows = (await getAllBookings()).slice();
 
   if (filters.screenId) rows = rows.filter((b) => b.screenId === filters.screenId);
   if (filters.status) rows = rows.filter((b) => b.status === filters.status);

@@ -32,7 +32,7 @@ export const SCREEN_PRESETS: Record<ScreenId, Screen> = {
       "The premium jungle room. Canopy textures, a private jacuzzi, fog effect, and the full Celebration set ready before you arrive.",
     operatingStart: 9,
     operatingEnd: 21,
-    basePrices: { "1h": 2950, "2h": 3950, "3h": 4950 },
+    basePrices: { "1h": 1950, "2h": 2950, "3h": 3950 },
     imageUrl: "",
   },
 };

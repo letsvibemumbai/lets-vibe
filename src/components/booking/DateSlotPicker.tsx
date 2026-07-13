@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { Loader2, Minus, Plus } from "lucide-react";
+import { Loader2, Lock, Minus, Plus } from "lucide-react";
 import { format, isBefore, startOfDay } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -179,7 +179,7 @@ export function DateSlotPicker({ screen }: Props) {
 
         <div>
           <div className="flex items-end justify-between border-b border-hairline pb-4">
-            <SectionLabel>Available slots</SectionLabel>
+            <SectionLabel>Time slots</SectionLabel>
             <p className="text-[11px] uppercase tracking-[0.22em] text-muted">
               Asia / Kolkata
             </p>
@@ -240,32 +240,62 @@ function SlotGrid({
       </div>
     );
   }
+  const hasReserved = slots.some((s) => s.available === false);
   return (
-    <div
-      className={cn(
-        "grid grid-cols-2 gap-2 sm:grid-cols-3",
-        pending && "opacity-60",
+    <>
+      <div
+        className={cn(
+          "grid grid-cols-2 gap-2 sm:grid-cols-3",
+          pending && "opacity-60",
+        )}
+      >
+        {slots.map((slot) => {
+          const reserved = slot.available === false;
+          if (reserved) {
+            return (
+              <div
+                key={`${slot.startTime}-${slot.durationHours}`}
+                aria-disabled="true"
+                title="Already reserved"
+                className={cn(
+                  "flex h-12 select-none items-center justify-center gap-1.5 rounded-sm bg-cream-tonal/25 px-2 font-mono text-[13px] tabular-nums tracking-tight text-ink/35 ring-1 ring-hairline/50",
+                  "cursor-not-allowed",
+                )}
+              >
+                <Lock className="h-3 w-3 shrink-0" strokeWidth={1.75} />
+                <span className="line-through decoration-ink/25">
+                  <TimeRange start={slot.startTime} end={slot.endTime} />
+                </span>
+              </div>
+            );
+          }
+          return (
+            <Link
+              key={`${slot.startTime}-${slot.durationHours}`}
+              href={`/book/${screenId}/auth`}
+              onClick={() => onPersist(slot)}
+              className={cn(
+                "group flex h-12 items-center justify-center rounded-sm bg-cream-tonal/60 px-2 font-mono text-[13px] tabular-nums tracking-tight text-ink ring-1 ring-hairline",
+                "transition-colors duration-200 hover:bg-ink hover:text-cream hover:ring-ink",
+                "focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/50",
+              )}
+            >
+              <TimeRange start={slot.startTime} end={slot.endTime} />
+            </Link>
+          );
+        })}
+        {pending && (
+          <div className="col-span-full flex items-center justify-center text-[11px] uppercase tracking-[0.22em] text-muted">
+            <Loader2 className="mr-2 h-3 w-3 animate-spin" /> updating
+          </div>
+        )}
+      </div>
+      {hasReserved && (
+        <p className="mt-3 flex items-center gap-1.5 text-[12px] text-muted">
+          <Lock className="h-3 w-3" strokeWidth={1.75} />
+          Dimmed times are already reserved.
+        </p>
       )}
-    >
-      {slots.map((slot) => (
-        <Link
-          key={`${slot.startTime}-${slot.durationHours}`}
-          href={`/book/${screenId}/auth`}
-          onClick={() => onPersist(slot)}
-          className={cn(
-            "group flex h-12 items-center justify-center rounded-sm bg-cream-tonal/60 px-2 font-mono text-[13px] tabular-nums tracking-tight text-ink ring-1 ring-hairline",
-            "transition-colors duration-200 hover:bg-ink hover:text-cream hover:ring-ink",
-            "focus:outline-none focus-visible:ring-2 focus-visible:ring-ink/50",
-          )}
-        >
-          <TimeRange start={slot.startTime} end={slot.endTime} />
-        </Link>
-      ))}
-      {pending && (
-        <div className="col-span-full flex items-center justify-center text-[11px] uppercase tracking-[0.22em] text-muted">
-          <Loader2 className="mr-2 h-3 w-3 animate-spin" /> updating
-        </div>
-      )}
-    </div>
+    </>
   );
 }

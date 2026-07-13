@@ -1,20 +1,28 @@
 import "server-only";
+import { cache } from "react";
 import { adminDb } from "@/lib/firebase/admin";
 import { SCREEN_IDS, SCREEN_PRESETS } from "@/lib/booking/constants";
 import type { Screen, ScreenId } from "@/types";
 
 const COLLECTION = "screens";
 
-export async function getScreens(): Promise<Screen[]> {
+// Per-request memoization (React `cache`): a page that reads the same screen(s)
+// in several places — e.g. `generateMetadata` + the page body both call
+// `getScreen(id)` — hits Firestore once per request instead of twice. Safe for
+// Firestore-as-source-of-truth because the memo lasts only for one render; a new
+// request (or a revalidatePath after an admin edit) always re-reads.
+export const getScreens = cache(async function getScreens(): Promise<Screen[]> {
   const snap = await adminDb.collection(COLLECTION).orderBy("name").get();
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as Screen);
-}
+});
 
-export async function getScreen(id: ScreenId): Promise<Screen | null> {
+export const getScreen = cache(async function getScreen(
+  id: ScreenId,
+): Promise<Screen | null> {
   const snap = await adminDb.collection(COLLECTION).doc(id).get();
   if (!snap.exists) return null;
   return { id: snap.id, ...snap.data() } as Screen;
-}
+});
 
 /**
  * Firestore screen, falling back to the built-in preset when the doc is missing

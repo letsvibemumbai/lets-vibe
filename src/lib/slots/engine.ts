@@ -4,6 +4,10 @@ export type Slot = {
   startTime: string;
   endTime: string;
   durationHours: number;
+  /** Whether this start time is bookable. Absent ⇒ treat as available (the
+   * available-only helpers never set it). The status-annotated helpers set it
+   * so the UI can show reserved slots disabled rather than hiding them. */
+  available?: boolean;
 };
 
 export type Availability = {
@@ -120,6 +124,47 @@ export function getAvailabilityForDate(
     "1h": getAvailableSlots(screen, date, 1, existingBookings, now),
     "2h": getAvailableSlots(screen, date, 2, existingBookings, now),
     "3h": getAvailableSlots(screen, date, 3, existingBookings, now),
+  };
+}
+
+/**
+ * Like {@link getAvailableSlots} but returns EVERY candidate start time,
+ * each flagged with `available`. Reserved slots (those overlapping an existing
+ * booking) are kept in the list — the customer sees them, disabled — instead
+ * of being silently hidden.
+ */
+export function getAllSlotsWithStatus(
+  screen: Screen,
+  date: string,
+  duration: Duration,
+  existingBookings: Booking[],
+  now: Date = new Date(),
+): Slot[] {
+  const candidates = generateCandidateSlots(screen, date, duration, now);
+  const conflicts = activeBookings(existingBookings)
+    .filter((b) => b.screenId === screen.id && b.date === date)
+    .map((b) => ({
+      start: timeToMinutes(b.startTime),
+      end: timeToMinutes(b.endTime),
+    }));
+  return candidates.map((slot) => {
+    const s = timeToMinutes(slot.startTime);
+    const e = timeToMinutes(slot.endTime);
+    const available = !conflicts.some((c) => rangesOverlap(s, e, c.start, c.end));
+    return { ...slot, available };
+  });
+}
+
+export function getAvailabilityWithStatusForDate(
+  screen: Screen,
+  date: string,
+  existingBookings: Booking[],
+  now: Date = new Date(),
+): Availability {
+  return {
+    "1h": getAllSlotsWithStatus(screen, date, 1, existingBookings, now),
+    "2h": getAllSlotsWithStatus(screen, date, 2, existingBookings, now),
+    "3h": getAllSlotsWithStatus(screen, date, 3, existingBookings, now),
   };
 }
 

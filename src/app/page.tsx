@@ -91,7 +91,7 @@ const SCREENS = [
       "Our premium jungle room — the only screen with a private jacuzzi. Made for the Celebration: cake, LED message tag, walking-on-cloud fog effect, and candle setup ready before you arrive.",
     details: [
       { label: "Theme", value: "Jungle · jacuzzi" },
-      { label: "Celebration", value: "From ₹3,950 / 2 hrs" },
+      { label: "Celebration", value: "From ₹2,950 / 2 hrs" },
       { label: "Extra guest", value: "₹300 / person" },
     ],
     photoKey: "screen-forest" as const,

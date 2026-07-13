@@ -3,7 +3,9 @@ import type { Booking, Duration, Screen, ScreenId } from "@/types";
 import {
   checkSlotStillAvailable,
   generateCandidateSlots,
+  getAllSlotsWithStatus,
   getAvailabilityForDate,
+  getAvailabilityWithStatusForDate,
   getAvailableSlots,
   minutesToTime,
   rangesOverlap,
@@ -278,6 +280,59 @@ describe("getAvailabilityForDate", () => {
     expect(result["1h"].length).toBe(47);
     expect(result["2h"].length).toBe(45);
     expect(result["3h"].length).toBe(43);
+  });
+});
+
+describe("getAllSlotsWithStatus (reserved shown, not hidden)", () => {
+  const screen = makeScreen({ operatingStart: 10, operatingEnd: 22 });
+
+  it("keeps every candidate and flags all available when nothing is booked", () => {
+    const all = getAllSlotsWithStatus(screen, DATE, 2, [], NOT_TODAY_NOW);
+    const avail = getAvailableSlots(screen, DATE, 2, [], NOT_TODAY_NOW);
+    expect(all).toHaveLength(avail.length);
+    expect(all.every((s) => s.available === true)).toBe(true);
+  });
+
+  it("marks overlapping slots reserved but keeps them in the list", () => {
+    const booking = makeBooking({
+      screenId: screen.id,
+      date: DATE,
+      startTime: "14:00",
+      endTime: "16:00",
+      duration: 2,
+    });
+    const all = getAllSlotsWithStatus(screen, DATE, 2, [booking], NOT_TODAY_NOW);
+    // Reserved slots are NOT removed — the full candidate set is preserved.
+    expect(all).toHaveLength(
+      getAllSlotsWithStatus(screen, DATE, 2, [], NOT_TODAY_NOW).length,
+    );
+    // 14:00 overlaps the booking → reserved; 12:00 (12–14) is back-to-back → free.
+    expect(all.find((s) => s.startTime === "14:00")?.available).toBe(false);
+    expect(all.find((s) => s.startTime === "12:00")?.available).toBe(true);
+    // The available subset matches the available-only helper exactly.
+    const availOnly = getAvailableSlots(screen, DATE, 2, [booking], NOT_TODAY_NOW);
+    expect(
+      all.filter((s) => s.available).map((s) => s.startTime).sort(),
+    ).toEqual(availOnly.map((s) => s.startTime).sort());
+  });
+
+  it("flags reserved slots across every duration bucket", () => {
+    const booking = makeBooking({
+      screenId: screen.id,
+      date: DATE,
+      startTime: "14:00",
+      endTime: "16:00",
+      duration: 2,
+    });
+    const avail = getAvailabilityWithStatusForDate(
+      screen,
+      DATE,
+      [booking],
+      NOT_TODAY_NOW,
+    );
+    expect(avail["1h"].some((s) => s.available === false)).toBe(true);
+    expect(avail["2h"].some((s) => s.available === false)).toBe(true);
+    expect(avail["3h"].some((s) => s.available === false)).toBe(true);
   });
 });
 

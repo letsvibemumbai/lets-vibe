@@ -11,7 +11,7 @@ import { rupeesToPaise } from "@/lib/razorpay/util";
 import {
   checkSlotStillAvailable,
   getAvailableSlots,
-  getAvailabilityForDate,
+  getAvailabilityWithStatusForDate,
   minutesToTime,
   timeToMinutes,
 } from "@/lib/slots/engine";
@@ -150,7 +150,7 @@ export async function getAllSlotsAction(
     .parse({ screenId, date });
   const screen = await fetchScreenOrThrow(parsed.screenId);
   const existing = await bookingsForScreenDate(parsed.screenId, parsed.date);
-  return getAvailabilityForDate(screen, parsed.date, existing);
+  return getAvailabilityWithStatusForDate(screen, parsed.date, existing);
 }
 
 type CreateBookingResult = {

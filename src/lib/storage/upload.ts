@@ -98,6 +98,56 @@ export async function uploadPublicBlob(
   return { ok: true, url, path };
 }
 
+function publicUrlFor(path: string): string {
+  return `https://storage.googleapis.com/${adminBucket.name}/${path}`;
+}
+
+export type SignedUpload = { uploadUrl: string; path: string; publicUrl: string };
+
+/**
+ * Mint a short-lived V4 signed URL the browser can PUT a file to DIRECTLY,
+ * bypassing the Next/Vercel serverless request-body limit (~4.5MB) that
+ * otherwise makes large images and videos fail. The client must PUT with a
+ * matching `Content-Type` header. After the upload, call
+ * {@link finalizePublicUpload} to make the object world-readable. Server-only —
+ * gate behind `requireAdmin()`.
+ */
+export async function createSignedUpload(opts: {
+  prefix: string;
+  contentType: string;
+  ttlMs?: number;
+}): Promise<SignedUpload> {
+  const ext = ALLOWED[opts.contentType];
+  if (!ext) throw new Error(`Unsupported file type: ${opts.contentType}`);
+  const id = crypto.randomBytes(12).toString("hex");
+  const path = `${opts.prefix}/${id}.${ext}`;
+  const [uploadUrl] = await adminBucket.file(path).getSignedUrl({
+    version: "v4",
+    action: "write",
+    expires: Date.now() + (opts.ttlMs ?? 10 * 60_000),
+    contentType: opts.contentType,
+  });
+  return { uploadUrl, path, publicUrl: publicUrlFor(path) };
+}
+
+/**
+ * After a direct upload, mark the object public and stamp long-cache metadata.
+ * Returns `{ ok: false }` if the object never landed (client aborted / failed
+ * PUT) so the caller can ask the user to retry. Server-only.
+ */
+export async function finalizePublicUpload(
+  path: string,
+): Promise<{ ok: boolean; url: string }> {
+  const file = adminBucket.file(path);
+  const [exists] = await file.exists();
+  if (!exists) return { ok: false, url: "" };
+  await file.makePublic();
+  await file
+    .setMetadata({ cacheControl: "public, max-age=31536000, immutable" })
+    .catch(() => {});
+  return { ok: true, url: publicUrlFor(path) };
+}
+
 /**
  * Delete a Storage object by path. Best-effort: a missing object (or a bucket
  * hiccup) resolves without throwing so callers can rewrite their references

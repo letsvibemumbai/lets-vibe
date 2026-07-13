@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { FieldValue } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
 import { timestampToMillis } from "@/lib/db/bookings.server";
@@ -39,7 +40,10 @@ export async function getExpense(id: string): Promise<Expense | null> {
   return toExpense(snap.id, snap.data()!);
 }
 
-export async function getExpensesInRange(
+// Per-request memoized (see getBookingsInRange). The accounting/reports pages
+// derive expense aggregates from the same range more than once per load; this
+// collapses identical (startDate, endDate) reads to a single Firestore query.
+export const getExpensesInRange = cache(async function getExpensesInRange(
   startDate: string,
   endDate: string,
 ): Promise<Expense[]> {
@@ -51,7 +55,7 @@ export async function getExpensesInRange(
   const rows = snap.docs.map((d) => toExpense(d.id, d.data()));
   rows.sort((a, b) => b.date.localeCompare(a.date));
   return rows;
-}
+});
 
 export async function getExpensesForMonth(year: number, month: number): Promise<Expense[]> {
   const { start, end } = monthRange(year, month);

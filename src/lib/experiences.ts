@@ -24,8 +24,10 @@ export function selectCelebrationPackage(
 /** "from ₹X" for the Celebration: the cheapest room's surcharge — the base
  * price or any lower per-screen override. */
 export function celebrationFromPrice(pkg: AddonPackage): number {
+  // Ignore non-positive overrides — a ₹0 per-screen price means the Celebration
+  // is included in that room's base (e.g. Nature Paradise), not a "from ₹0".
   const overrides = Object.values(pkg.priceByScreen ?? {}).filter(
-    (v): v is number => typeof v === "number",
+    (v): v is number => typeof v === "number" && v > 0,
   );
   return Math.min(pkg.price, ...overrides);
 }
