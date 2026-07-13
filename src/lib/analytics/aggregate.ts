@@ -16,6 +16,11 @@ import {
   emptyMethodTotals,
   totalCollected as bookingTotalCollected,
 } from "@/lib/booking/payments";
+import {
+  addOnsTotal,
+  foodRevenue,
+  roomRevenue,
+} from "@/lib/booking/revenue";
 import type {
   Booking,
   BookingPaymentMethod,
@@ -155,6 +160,12 @@ export type CollectionSummary = {
   totalCollected: number;
   /** Billed revenue (full value of confirmed/completed bookings). */
   billedRevenue: number;
+  /** Room-only revenue — the Excel's "Income" (billed − food − add-ons). */
+  roomRevenue: number;
+  /** Food-bill revenue. */
+  foodRevenue: number;
+  /** À-la-carte add-on / package revenue. */
+  addOnRevenue: number;
   /** Still owed: billed − collected (never negative). */
   outstanding: number;
 };
@@ -174,10 +185,16 @@ function collectionSummaryFor(bookings: Booking[]): CollectionSummary {
     0,
   );
   const billedRevenue = revenueBookings.reduce((s, b) => s + revenueOf(b), 0);
+  const room = revenueBookings.reduce((s, b) => s + roomRevenue(b), 0);
+  const food = revenueBookings.reduce((s, b) => s + foodRevenue(b), 0);
+  const addOn = revenueBookings.reduce((s, b) => s + addOnsTotal(b), 0);
   return {
     byMethod: bucketsForMethods(bookings),
     totalCollected,
     billedRevenue,
+    roomRevenue: room,
+    foodRevenue: food,
+    addOnRevenue: addOn,
     outstanding: Math.max(0, billedRevenue - totalCollected),
   };
 }
@@ -267,6 +284,9 @@ export type MonthlyReport = {
   end: string;
   totals: {
     revenue: number;
+    roomRevenue: number;
+    foodRevenue: number;
+    addOnRevenue: number;
     expenses: number;
     net: number;
     bookingCount: number;
@@ -307,6 +327,9 @@ export async function getMonthlyReport(
     end,
     totals: {
       revenue,
+      roomRevenue: collection.roomRevenue,
+      foodRevenue: collection.foodRevenue,
+      addOnRevenue: collection.addOnRevenue,
       expenses: expenseTotal,
       net: revenue - expenseTotal,
       bookingCount: bookings.filter(isRevenue).length,

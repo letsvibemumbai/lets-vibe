@@ -114,6 +114,10 @@ export type Booking = {
     selections?: BookingAddonSelection[];
   };
   amount: number;
+  /** The food portion of `amount` (a reporting breakout — `amount` remains the
+   * full billed total, so balance/payment math is unaffected). Room revenue =
+   * `amount - foodBill - add-on selections`. Absent ⇒ 0. */
+  foodBill?: number;
   /** Cached sum of `payments` (rupees received so far). `amount - amountPaid`
    * is the balance still due at the venue. */
   amountPaid: number;
@@ -329,5 +333,33 @@ export type Expense = {
   amount: number;
   paymentMethod: ExpensePaymentMethod;
   receiptUrl?: string;
+  /** Set when this expense is auto-created from an Influencers-tab entry
+   * (id `inf-exp-{influencerId}`), so it can be synced/removed with it. */
+  influencerId?: string;
   createdAt: number;
+};
+
+/** How a shot influencer reel performed (owner-updated). */
+export type InfluencerPerformance = "excellent" | "good" | "bad" | "pending";
+
+/**
+ * An influencer collaboration tracked in the admin panel. The `amount` paid is
+ * also mirrored into a linked marketing `Expense` (`inf-exp-{id}`) so it flows
+ * into accounting exactly once.
+ */
+export type Influencer = {
+  id: string;
+  name: string;
+  /** Rupees paid to the influencer. */
+  amount: number;
+  /** Date of the shoot / collaboration (YYYY-MM-DD). */
+  dateOfShoot: string;
+  /** Instagram handle (with or without the leading @). */
+  igHandle: string;
+  reelLink?: string;
+  paymentMethod: ExpensePaymentMethod;
+  performance: InfluencerPerformance;
+  notes?: string;
+  createdAt: number;
+  updatedAt: number;
 };

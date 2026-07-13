@@ -9,9 +9,11 @@ import {
   ArrowUpRight,
   Banknote,
   CircleDollarSign,
+  PackagePlus,
   Scale,
   Smartphone,
   TrendingUp,
+  Utensils,
   Wallet,
 } from "lucide-react";
 import {
@@ -114,10 +116,10 @@ export default async function AdminAccountingPage({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <SummaryCard
           icon={<ArrowUpRight className="h-4 w-4" />}
-          label="Total revenue"
+          label="Total billed"
           value={totalRevenue}
           tone="up"
-          subtitle="Confirmed + completed bookings"
+          subtitle="Room + food + add-ons"
         />
         <SummaryCard
           icon={<ArrowDownRight className="h-4 w-4" />}
@@ -134,6 +136,32 @@ export default async function AdminAccountingPage({
           subtitle={net >= 0 ? "In the black" : "In the red"}
         />
       </div>
+
+      <section>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground/55">
+          Revenue breakdown
+        </h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <BalanceCard
+            icon={<TrendingUp className="h-4 w-4" />}
+            label="Income (room)"
+            value={collection.roomRevenue}
+            accent="text-emerald-700"
+          />
+          <BalanceCard
+            icon={<Utensils className="h-4 w-4" />}
+            label="Food"
+            value={collection.foodRevenue}
+            accent="text-foreground"
+          />
+          <BalanceCard
+            icon={<PackagePlus className="h-4 w-4" />}
+            label="Add-ons"
+            value={collection.addOnRevenue}
+            accent="text-foreground"
+          />
+        </div>
+      </section>
 
       <section>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground/55">
@@ -179,14 +207,14 @@ export default async function AdminAccountingPage({
 
       <div className="grid gap-6 lg:grid-cols-3">
         <PieCard
-          title="Revenue by screen"
+          title="Billed by screen"
           icon={<TrendingUp className="h-4 w-4" />}
           data={revenueByScreen}
           colors={SCREEN_COLORS}
           total={totalRevenue}
         />
         <PieCard
-          title="Revenue by source"
+          title="Billed by source"
           icon={<TrendingUp className="h-4 w-4" />}
           data={revenueBySource}
           colors={SOURCE_COLORS}

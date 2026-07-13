@@ -13,6 +13,7 @@ import {
   timestampToMillis,
   todayString,
 } from "@/lib/db/bookings.server";
+import { roomRevenue } from "@/lib/booking/revenue";
 import type { Booking, BookingStatus } from "@/types";
 
 export type Totals = { count: number; revenue: number };
@@ -30,11 +31,10 @@ function isoDay(d: Date): string {
 
 function totalsFor(bookings: Booking[]): Totals {
   let revenue = 0;
-  // Billed revenue (the booking's full value). Matches the accounting page and
-  // is stable for the new 50%-deposit bookings (counts the whole bill, not just
-  // the collected deposit). For legacy data this equals the old amountPaid||amount.
+  // Room income (the Excel's "Income"): the booking's value minus food + add-ons.
+  // Food and add-ons are broken out on the accounting page.
   for (const b of bookings) {
-    if (REVENUE_STATUSES.has(b.status)) revenue += b.amount;
+    if (REVENUE_STATUSES.has(b.status)) revenue += roomRevenue(b);
   }
   return { count: bookings.length, revenue };
 }
@@ -111,7 +111,7 @@ export function revenueByDayForMonth(
   for (const b of bookings) {
     if (!REVENUE_STATUSES.has(b.status)) continue;
     const slot = byDate.get(b.date);
-    if (slot) slot.revenue += b.amount;
+    if (slot) slot.revenue += roomRevenue(b);
   }
   return days;
 }

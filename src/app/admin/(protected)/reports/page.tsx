@@ -1,4 +1,5 @@
 import { format, parseISO } from "date-fns";
+import { FileText } from "lucide-react";
 import { getMonthlyReport } from "@/lib/analytics/aggregate";
 import { ReportToolbar } from "@/components/admin/reports/ReportToolbar";
 import {
@@ -52,13 +53,20 @@ export default async function AdminReportsPage({
         }
       `}</style>
 
-      <div data-print-hide>
+      <div data-print-hide className="flex flex-wrap items-center gap-3">
         <ReportToolbar
           year={year}
           month={month}
           start={report.start}
           end={report.end}
         />
+        <a
+          href={`/api/admin/reports/export?year=${year}&month=${month}`}
+          className="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition-transform hover:scale-[1.03]"
+        >
+          <FileText className="h-4 w-4" />
+          Download PDF
+        </a>
       </div>
 
       <div
@@ -79,7 +87,7 @@ export default async function AdminReportsPage({
 
         <Section title="P&L summary" data-print-section="">
           <div className="grid grid-cols-3 gap-4">
-            <StatBlock label="Revenue" value={report.totals.revenue} tone="up" />
+            <StatBlock label="Total billed" value={report.totals.revenue} tone="up" />
             <StatBlock
               label="Expenses"
               value={report.totals.expenses}
@@ -92,6 +100,11 @@ export default async function AdminReportsPage({
             />
           </div>
           <p className="mt-3 text-xs text-foreground/55">
+            Income (room) {formatINR(report.totals.roomRevenue)} · Food{" "}
+            {formatINR(report.totals.foodRevenue)} · Add-ons{" "}
+            {formatINR(report.totals.addOnRevenue)}
+          </p>
+          <p className="mt-1 text-xs text-foreground/55">
             {report.totals.bookingCount} revenue-earning bookings ·{" "}
             {report.totals.expenseCount} expense entries
           </p>

@@ -3,7 +3,14 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Download, Loader2, X } from "lucide-react";
+import {
+  Check,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Loader2,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -69,6 +76,25 @@ export function BookingsTable({ rows, filters }: Props) {
         toast.error(err instanceof Error ? err.message : "Bulk update failed");
       }
     });
+  }
+
+  // Build the shared export URL from the active filters (mirrors the server-side
+  // parseFilters). `window.location.href` triggers a normal authenticated GET so
+  // the browser downloads the branded file.
+  function exportUrl(format: "xlsx" | "pdf"): string {
+    const params = new URLSearchParams();
+    if (filters.screenId) params.set("screen", filters.screenId);
+    if (filters.status) params.set("status", filters.status);
+    if (filters.source) params.set("source", filters.source);
+    if (filters.dateFrom) params.set("from", filters.dateFrom);
+    if (filters.dateTo) params.set("to", filters.dateTo);
+    if (filters.query) params.set("q", filters.query);
+    params.set("format", format);
+    return `/api/admin/bookings/export?${params.toString()}`;
+  }
+
+  function downloadExport(format: "xlsx" | "pdf") {
+    window.location.href = exportUrl(format);
   }
 
   async function exportCsv() {
@@ -143,6 +169,22 @@ export function BookingsTable({ rows, filters }: Props) {
               <Download className="h-3.5 w-3.5" />
             )}
             Export CSV
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => downloadExport("xlsx")}
+          >
+            <FileSpreadsheet className="h-3.5 w-3.5" />
+            Excel
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => downloadExport("pdf")}
+          >
+            <FileText className="h-3.5 w-3.5" />
+            PDF
           </Button>
         </div>
       </div>

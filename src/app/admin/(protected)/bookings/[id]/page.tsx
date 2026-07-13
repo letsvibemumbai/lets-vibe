@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import {
   ArrowLeft,
   CreditCard,
+  FileDown,
   IndianRupee,
   QrCode,
   Receipt,
@@ -102,6 +103,15 @@ export default async function BookingDetailPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <a
+            href={`/api/admin/bookings/${booking.id}/receipt`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-foreground/80 ring-1 ring-hairline-strong transition-colors hover:bg-card"
+          >
+            <FileDown className="h-3.5 w-3.5" />
+            Download receipt
+          </a>
           <Link
             href={`/admin/check-in/${booking.id}`}
             className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-foreground/80 ring-1 ring-hairline-strong transition-colors hover:bg-card"

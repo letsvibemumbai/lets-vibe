@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
     "google-gax",
     "farmhash-modern",
     "nodemailer",
+    "exceljs",
+    "pdfkit",
   ],
   images: {
     remotePatterns: [
