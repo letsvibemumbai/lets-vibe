@@ -33,7 +33,6 @@ import type {
   AddonItem,
   AddonPackage,
   BookingAddonSelection,
-  BookingPaymentMethod,
   Duration,
   Screen,
   ScreenId,
@@ -46,12 +45,10 @@ type Props = {
 };
 
 const DURATIONS: Duration[] = [1, 2, 3];
-const METHODS: { value: BookingPaymentMethod; label: string }[] = [
-  { value: "cash", label: "Cash" },
-  { value: "upi", label: "UPI" },
-  { value: "card", label: "Card" },
-  { value: "bank", label: "Bank transfer" },
-];
+
+/** Venue tenders the admin can record for the advance / balance. */
+type Tender = "cash" | "upi";
+type BalanceTender = Tender | "pending";
 
 function todayIso(): string {
   const d = new Date();
@@ -81,9 +78,6 @@ export function OfflineBookingForm({ screens, items, packages }: Props) {
   const [selections, setSelections] = useState<BookingAddonSelection[]>([]);
   const [decorations, setDecorations] = useState("");
 
-  const [paymentMethod, setPaymentMethod] =
-    useState<BookingPaymentMethod>("cash");
-
   const computedPrice = screen
     ? calculateBookingPrice(screen, duration, {
         selections,
@@ -93,12 +87,25 @@ export function OfflineBookingForm({ screens, items, packages }: Props) {
   const [amount, setAmount] = useState<number>(computedPrice);
   const [amountManuallyEdited, setAmountManuallyEdited] = useState(false);
 
+  // Advance now + balance later, each with its own tender (mirrors the money
+  // columns the owner keeps by hand). Advance defaults to the full deal amount
+  // (paid in full) until the admin edits it down.
+  const [advanceAmount, setAdvanceAmount] = useState<number>(computedPrice);
+  const [advanceEdited, setAdvanceEdited] = useState(false);
+  const [advanceMethod, setAdvanceMethod] = useState<Tender>("cash");
+  const [balanceMethod, setBalanceMethod] = useState<BalanceTender>("pending");
+
   const [notes, setNotes] = useState("");
   const [submitting, startSubmitTransition] = useTransition();
 
   useEffect(() => {
     if (!amountManuallyEdited) setAmount(computedPrice);
   }, [computedPrice, amountManuallyEdited]);
+
+  // Keep the advance tracking the deal amount (full) until the admin overrides it.
+  useEffect(() => {
+    if (!advanceEdited) setAdvanceAmount(amount);
+  }, [amount, advanceEdited]);
 
   // Screen switches mid-form: drop items the new screen doesn't offer (e.g.
   // Rose petals off forest) and re-snapshot per-screen package prices.
@@ -133,6 +140,11 @@ export function OfflineBookingForm({ screens, items, packages }: Props) {
   }, [screenId, date, duration]);
 
   const discount = Math.max(0, computedPrice - amount);
+  const advance = Math.max(0, Math.min(advanceAmount, amount));
+  const balance = amount - advance;
+  const balanceCollected = balance > 0 && balanceMethod !== "pending";
+  const collectedNow = advance + (balanceCollected ? balance : 0);
+  const dueAtVenue = amount - collectedNow;
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -161,8 +173,10 @@ export function OfflineBookingForm({ screens, items, packages }: Props) {
               quantity: s.quantity,
             })),
           },
-          paymentMethod,
           amount,
+          advanceAmount: advance,
+          advanceMethod,
+          balanceMethod,
           notes: notes.trim() || undefined,
         });
         // Server action redirects on success — only reached on failure.
@@ -336,42 +350,92 @@ export function OfflineBookingForm({ screens, items, packages }: Props) {
       </Section>
 
       <Section title="Payment">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Method">
+        {/* Rate the deal closed at */}
+        <Field
+          id="amount"
+          label={`Deal amount — rate closed at (list price ${formatINR(computedPrice)})`}
+        >
+          <Input
+            id="amount"
+            type="number"
+            min={0}
+            value={amount}
+            onChange={(e) => {
+              setAmount(Math.max(0, Number(e.target.value) || 0));
+              setAmountManuallyEdited(true);
+            }}
+          />
+        </Field>
+        {discount > 0 && (
+          <p className="mt-2 text-xs text-amber-700">
+            Discount vs list price: {formatINR(discount)} (logged on the booking)
+          </p>
+        )}
+
+        {/* Advance + how it was paid */}
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <Field id="advance" label="Advance received (₹)">
+            <Input
+              id="advance"
+              type="number"
+              min={0}
+              max={amount}
+              value={advanceAmount}
+              onChange={(e) => {
+                setAdvanceAmount(
+                  Math.max(0, Math.min(amount, Number(e.target.value) || 0)),
+                );
+                setAdvanceEdited(true);
+              }}
+            />
+          </Field>
+          <Field label="Advance paid via">
             <Select
-              value={paymentMethod}
-              onValueChange={(v) => setPaymentMethod(v as BookingPaymentMethod)}
+              value={advanceMethod}
+              onValueChange={(v) => setAdvanceMethod(v as Tender)}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {METHODS.map((m) => (
-                  <SelectItem key={m.value} value={m.value}>
-                    {m.label}
-                  </SelectItem>
-                ))}
+                <SelectItem value="cash">Cash</SelectItem>
+                <SelectItem value="upi">UPI</SelectItem>
               </SelectContent>
             </Select>
           </Field>
-          <Field id="amount" label={`Amount (auto: ${formatINR(computedPrice)})`}>
-            <Input
-              id="amount"
-              type="number"
-              min={0}
-              value={amount}
-              onChange={(e) => {
-                setAmount(Math.max(0, Number(e.target.value) || 0));
-                setAmountManuallyEdited(true);
-              }}
-            />
+        </div>
+
+        {/* Remaining balance + how it was paid */}
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <Field label="Remaining balance">
+            <div className="flex h-9 items-center rounded-md bg-cream/50 px-3 text-sm font-medium text-foreground ring-1 ring-hairline">
+              {formatINR(balance)}
+            </div>
+          </Field>
+          <Field label="Balance paid via">
+            <Select
+              value={balanceMethod}
+              onValueChange={(v) => setBalanceMethod(v as BalanceTender)}
+              disabled={balance <= 0}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Due at venue (not yet paid)</SelectItem>
+                <SelectItem value="cash">Cash</SelectItem>
+                <SelectItem value="upi">UPI</SelectItem>
+              </SelectContent>
+            </Select>
           </Field>
         </div>
-        {discount > 0 && (
-          <p className="mt-2 text-xs text-amber-700">
-            Discount: {formatINR(discount)} (logged on the booking)
-          </p>
-        )}
+        <p className="mt-2 text-xs text-foreground/60">
+          {balance <= 0
+            ? "Paid in full."
+            : balanceMethod === "pending"
+              ? `${formatINR(balance)} still due — collect at the venue.`
+              : `${formatINR(balance)} collected via ${balanceMethod === "upi" ? "UPI" : "cash"}.`}
+        </p>
       </Section>
 
       <Section title="Notes">
@@ -391,6 +455,12 @@ export function OfflineBookingForm({ screens, items, packages }: Props) {
           </p>
           <p className="font-display text-2xl text-foreground">
             {formatINR(amount)}
+          </p>
+          <p className="mt-1 text-xs text-foreground/55">
+            Collected {formatINR(collectedNow)}
+            {dueAtVenue > 0
+              ? ` · ${formatINR(dueAtVenue)} due at venue`
+              : " · fully paid"}
           </p>
         </div>
         <Button type="submit" disabled={submitting || !startTime || !customerName || !customerPhone}>

@@ -61,7 +61,6 @@ const PhoneSchema = z
   .string()
   .trim()
   .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number");
-const PaymentMethodSchema = z.enum(["razorpay", "cash", "upi", "card", "bank"]);
 
 function revalidate() {
   revalidatePath("/admin");
@@ -306,8 +305,13 @@ const CreateOfflineSchema = z.object({
       .or(z.literal("").transform(() => undefined)),
     selections: z.array(SelectionRequestSchema).max(40).optional(),
   }),
-  paymentMethod: PaymentMethodSchema,
+  // Deal total (the rate the booking closed at) + how it was collected: an
+  // advance now and the remaining balance (collected now via cash/UPI, or left
+  // "pending" = due at the venue). Each tender lands in the payments ledger.
   amount: z.number().int().min(0),
+  advanceAmount: z.number().int().min(0),
+  advanceMethod: z.enum(["cash", "upi"]),
+  balanceMethod: z.enum(["cash", "upi", "pending"]),
   notes: z
     .string()
     .max(1000)
@@ -322,9 +326,6 @@ export async function createOfflineBookingAction(
 ): Promise<{ bookingId: string }> {
   await requireAdmin();
   const payload = CreateOfflineSchema.parse(raw);
-  if (payload.paymentMethod === "razorpay") {
-    throw new Error("Offline bookings cannot use Razorpay as payment method");
-  }
   const screen = await getScreen(payload.screenId);
   if (!screen) throw new Error(`Screen "${payload.screenId}" not found`);
 
@@ -379,21 +380,38 @@ export async function createOfflineBookingAction(
       source: "offline",
     });
 
-    // Record the collected amount as a ledger entry so it flows into the
-    // UPI/cash balances. A ₹0 (free) booking gets no entry.
-    const offlinePayments: BookingPayment[] =
-      finalAmount > 0
-        ? [
-            {
-              id: crypto.randomUUID(),
-              amount: finalAmount,
-              method: payload.paymentMethod,
-              channel: "venue",
-              kind: "full",
-              at: Date.now(),
-            },
-          ]
-        : [];
+    // Ledger entries from the advance + balance the admin recorded, each with
+    // its own tender. A "pending" balance is left uncollected (due at venue),
+    // so it flows through as outstanding.
+    const advance = Math.min(Math.max(0, payload.advanceAmount), finalAmount);
+    const balance = finalAmount - advance;
+    const balanceCollected = payload.balanceMethod !== "pending";
+    const paidAt = Date.now();
+    const offlinePayments: BookingPayment[] = [];
+    if (advance > 0) {
+      offlinePayments.push({
+        id: crypto.randomUUID(),
+        amount: advance,
+        method: payload.advanceMethod,
+        channel: "venue",
+        kind: balance > 0 ? "deposit" : "full",
+        at: paidAt,
+      });
+    }
+    if (balance > 0 && balanceCollected) {
+      offlinePayments.push({
+        id: crypto.randomUUID(),
+        amount: balance,
+        method: payload.balanceMethod as BookingPaymentMethod,
+        channel: "venue",
+        kind: "balance",
+        at: paidAt,
+      });
+    }
+    const amountPaid = offlinePayments.reduce((s, p) => s + p.amount, 0);
+    const lastMethod: BookingPaymentMethod = offlinePayments.length
+      ? offlinePayments[offlinePayments.length - 1].method
+      : payload.advanceMethod;
 
     const ref = adminDb.collection(COLLECTION).doc();
     tx.set(ref, {
@@ -412,14 +430,14 @@ export async function createOfflineBookingAction(
         selections: resolvedSelections,
       },
       amount: finalAmount,
-      amountPaid: finalAmount,
+      amountPaid,
       payments: offlinePayments,
-      paymentPlan: "full",
+      paymentPlan: amountPaid >= finalAmount ? "full" : "deposit",
       originalAmount,
       discount,
       status: "confirmed" satisfies BookingStatus,
       source: "offline" satisfies BookingSource,
-      paymentMethod: payload.paymentMethod satisfies BookingPaymentMethod,
+      paymentMethod: lastMethod,
       notes: payload.notes ?? null,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
