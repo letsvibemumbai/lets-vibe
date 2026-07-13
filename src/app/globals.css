@@ -269,6 +269,24 @@
     font-family: var(--font-body), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     background-color: var(--background);
   }
+  /* Admin panel typography: San Francisco / "SF UI".
+     Apple's SF font can't be bundled, so we use the system stack — real SF Pro
+     on Apple devices (via -apple-system / BlinkMacSystemFont), the named SF Pro
+     faces if the user has them installed (e.g. on Windows), otherwise a graceful
+     fall-through to system-ui / Segoe UI. Scoped to the admin shell only; the
+     marketing site keeps its Geist + Playfair pairing. Overriding the font CSS
+     variables makes every `font-body` / `font-display` utility inside the admin
+     subtree resolve to SF, headings included. */
+  .admin-sf {
+    --font-sf: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+      "SF Pro", "San Francisco", ui-sans-serif, system-ui, "Segoe UI", Roboto,
+      Helvetica, Arial, sans-serif;
+    --font-body: var(--font-sf);
+    --font-sans: var(--font-sf);
+    --font-display: var(--font-sf);
+    --font-heading: var(--font-sf);
+    font-family: var(--font-sf);
+  }
   /* Fixed page wash behind public pages — theme-aware. */
   .continuous-bg {
     background:

@@ -28,7 +28,7 @@ export function AdminShell({ username, children }: Props) {
   const pageTitle = getPageTitle(pathname);
 
   return (
-    <div className="flex min-h-screen bg-background font-body text-foreground">
+    <div className="admin-sf flex min-h-screen bg-background font-body text-foreground">
       <Sidebar
         username={username}
         mobileOpen={mobileOpen}
