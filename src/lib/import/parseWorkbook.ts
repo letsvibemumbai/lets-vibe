@@ -19,6 +19,9 @@ import type {
  * so re-importing the same workbook never duplicates rows:
  *   - bookings → `xls-b-{Sr}`
  *   - expenses → `xls-e-{sha1(date|detail|method|amount)[:12]}`
+ * Duplicate rows are collapsed to a single entry (a repeated Sr No, or an
+ * identical date/detail/method/amount expense row, is imported only once), so
+ * re-importing the same workbook never adds a duplicate.
  * Pure-ish: reads only the passed buffer, no I/O.
  */
 
@@ -252,6 +255,8 @@ export async function parseWorkbook(
   if (!bookingSheet) {
     warnings.push(`Worksheet "${BOOKING_SHEET}" not found.`);
   } else {
+    // Duplicate guard: a repeated Sr No is imported only once.
+    const seenBookingIds = new Set<string>();
     for (let r = DATA_START_ROW; r <= bookingSheet.rowCount; r++) {
       const row = bookingSheet.getRow(r);
       const srNum = cellNumber(row.getCell(B.sr).value);
@@ -260,6 +265,11 @@ export async function parseWorkbook(
       if (!srNum || !name) continue;
       const sr = Math.trunc(srNum);
       const id = `xls-b-${sr}`;
+      if (seenBookingIds.has(id)) {
+        warnings.push(`Sr ${sr}: duplicate Sr No in the sheet — imported only once.`);
+        continue;
+      }
+      seenBookingIds.add(id);
 
       const dateISO = toDateISO(row.getCell(B.slotDate).value);
       if (!dateISO) {
@@ -411,11 +421,11 @@ export async function parseWorkbook(
   if (!expenseSheet) {
     warnings.push(`Worksheet "${EXPENSE_SHEET}" not found.`);
   } else {
-    // Distinct stable ids for genuinely-identical rows (same date/detail/
-    // method/amount): the first keeps `xls-e-{hash}`, repeats get `-2`, `-3`…
-    // so two identical ledger entries both import instead of colliding into one
-    // doc id (which would make the write batch reject the whole commit).
-    const idCounts = new Map<string, number>();
+    // Duplicate guard: identical rows (same date/detail/method/amount) collapse
+    // to a single entry — a repeated ledger row is never imported twice. With the
+    // deterministic id + the route's add-new-only existence check, re-uploading
+    // the same workbook adds nothing.
+    const seenExpenseIds = new Set<string>();
     for (let r = DATA_START_ROW; r <= expenseSheet.rowCount; r++) {
       const row = expenseSheet.getRow(r);
       const outCash = cellNumber(row.getCell(E.outCash).value);
@@ -446,9 +456,14 @@ export async function parseWorkbook(
           .update(`${dateISO}|${detail}|${method}|${amount}`)
           .digest("hex")
           .slice(0, 12);
-        const n = (idCounts.get(hash) ?? 0) + 1;
-        idCounts.set(hash, n);
-        const id = n === 1 ? `xls-e-${hash}` : `xls-e-${hash}-${n}`;
+        const id = `xls-e-${hash}`;
+        if (seenExpenseIds.has(id)) {
+          warnings.push(
+            `Expense row ${r}: duplicate of an earlier identical row ("${detail}", ₹${amount}) — imported only once.`,
+          );
+          return;
+        }
+        seenExpenseIds.add(id);
         expenses.push({
           id,
           date: dateISO,
